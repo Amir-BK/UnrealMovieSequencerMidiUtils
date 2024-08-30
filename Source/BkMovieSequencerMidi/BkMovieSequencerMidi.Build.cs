@@ -4,6 +4,7 @@ using UnrealBuildTool;
 
 public class BkMovieSequencerMidi : ModuleRules
 {
+	private bool bStrictIncludesCheck = true;
 	public BkMovieSequencerMidi(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
@@ -32,7 +33,7 @@ public class BkMovieSequencerMidi : ModuleRules
 				"LevelSequence",
 				"MovieScene",
 				"MovieSceneTracks",
-				"SequencerCore"
+				
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);
@@ -60,5 +61,13 @@ public class BkMovieSequencerMidi : ModuleRules
 				// ... add any modules that your module loads dynamically here ...
 			}
 			);
+
+		if (bStrictIncludesCheck)
+		{
+			bUseUnity = false;
+			PCHUsage = PCHUsageMode.NoPCHs;
+			// Enable additional checks used for Engine modules
+			bTreatAsEngineModule = true;
+		}
 	}
 }

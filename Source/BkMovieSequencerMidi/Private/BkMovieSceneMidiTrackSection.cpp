@@ -168,6 +168,7 @@ TOptional<FFrameTime> UBkMovieSceneMidiTrackSection::GetOffsetTime() const
 	return TOptional<FFrameTime>();
 }
 
+#if WITH_EDITOR
 FText UBkMovieSceneMidiTrackSection::GetSectionTitle() const
 {
 	if (!IsValid(ParentTrack))
@@ -177,6 +178,7 @@ FText UBkMovieSceneMidiTrackSection::GetSectionTitle() const
 	
 	return ParentTrack->GetTrackRowDisplayName(TrackIndexInParentSession);
 }
+#endif
 
 
 

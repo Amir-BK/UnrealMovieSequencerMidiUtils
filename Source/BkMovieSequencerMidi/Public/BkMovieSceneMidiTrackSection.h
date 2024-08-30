@@ -125,9 +125,9 @@ public:
 	//	ChannelProxy = MakeShared<FMovieSceneChannelProxy>(MoveTemp(Channels));
 	//	return EMovieSceneChannelProxyType::Dynamic;
 	//}
-
+#if WITH_EDITOR
 	FText GetSectionTitle() const;
-
+#endif 
 
 	
 protected:

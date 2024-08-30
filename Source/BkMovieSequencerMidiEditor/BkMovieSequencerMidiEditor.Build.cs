@@ -4,6 +4,7 @@ using UnrealBuildTool;
 
 public class BkMovieSequencerMidiEditor : ModuleRules
 {
+	private bool bStrictIncludesCheck = true;
 	public BkMovieSequencerMidiEditor(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
@@ -45,9 +46,9 @@ public class BkMovieSequencerMidiEditor : ModuleRules
 				"LevelEditor",
 				"InteractiveToolsFramework",
 				"EditorInteractiveToolsFramework",
-				"Sequencer", "EditorStyle", "SequencerCore",
+				"Sequencer", "EditorStyle", 
 				"BkMovieSequencerMidi", "HarmonixDsp", "HarmonixMidi", "Harmonix",
-				 "MovieSceneTools", "MovieScene"
+				 "MovieSceneTools", "MovieScene", "SequencerCore"
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);
@@ -59,5 +60,13 @@ public class BkMovieSequencerMidiEditor : ModuleRules
 				// ... add any modules that your module loads dynamically here ...
 			}
 			);
+
+		if (bStrictIncludesCheck)
+		{
+			bUseUnity = false;
+			PCHUsage = PCHUsageMode.NoPCHs;
+			// Enable additional checks used for Engine modules
+			bTreatAsEngineModule = true;
+		}
 	}
 }
