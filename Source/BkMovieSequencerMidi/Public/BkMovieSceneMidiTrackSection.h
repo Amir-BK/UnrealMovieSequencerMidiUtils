@@ -13,6 +13,7 @@
 //#include "MidiBroadcasters/MidiBroadcasterPlayHead.h"
 //#include "MidiObjects/MidiAsset.h"
 #include "Sections/MovieSceneHookSection.h"
+#include "MovieSceneTrack.h"
 #include "BkMovieSequencerMidi.h"
 //#include "M2SoundGraphData.h"
 #include <HarmonixMidi/SongMaps.h>
@@ -97,18 +98,44 @@ public:
 
 	virtual TOptional<TRange<FFrameNumber> > GetAutoSizeRange() const override { return TRange<FFrameNumber>::Empty(); }
 	virtual void TrimSection(FQualifiedFrameTime TrimTime, bool bTrimLeft, bool bDeleteKeys) override {}
-	virtual UMovieSceneSection* SplitSection(FQualifiedFrameTime SplitTime, bool bDeleteKeys) override { return nullptr; }
+	//virtual UMovieSceneSection* SplitSection(FQualifiedFrameTime SplitTime, bool bDeleteKeys) override { return nullptr; }
 	virtual TOptional<FFrameTime> GetOffsetTime() const override;
 	virtual void MigrateFrameTimes(FFrameRate SourceRate, FFrameRate DestinationRate) override {  };
-	//virtual void PostEditImport() override 
-	virtual EMovieSceneChannelProxyType CacheChannelProxy() override;
 
+	//virtual EMovieSceneChannelProxyType CacheChannelProxy() override
+	//{
+	//	FMovieSceneChannelProxyData Channels;
 
+	//	UBkMovieSceneMidiTrackSection* MutableThis = const_cast<UBkMovieSceneMidiTrackSection*>(this);
+	//	UMovieScene* MovieScene = MutableThis->GetTypedOuter<UMovieScene>();
+
+	//	FMovieSceneChannelMetaData MetaData;
+	//	MetaData.Name = FName("SoundVolume");
+	//	MetaData.DisplayText = NSLOCTEXT("MovieScene", "SoundVolume", "Sound Volume");
+	//	Channels.Add(SoundVolume, MetaData, TMovieSceneExternalValue<float>());
+
+	//	MetaData.Name = FName("PitchBend");
+	//	MetaData.DisplayText = NSLOCTEXT("MovieScene", "PitchBend", "Pitch Bend");
+	//	Channels.Add(PitchBend, MetaData, TMovieSceneExternalValue<float>());
+
+	//	//MetaData.Name = FName("MidiNotes");
+	//	//MetaData.DisplayText = NSLOCTEXT("MovieScene", "MidiNotes", "Midi Notes");
+	//	//Channels.Add(MidiNotes, MetaData, TMovieSceneExternalValue<FLinkedMidiEvents>());
+
+	//	ChannelProxy = MakeShared<FMovieSceneChannelProxy>(MoveTemp(Channels));
+	//	return EMovieSceneChannelProxyType::Dynamic;
+	//}
+
+	FText GetSectionTitle() const;
 
 
 	
 protected:
 
+	friend class UBkMovieSceneMidiTrack;
+
+	UPROPERTY()
+	TObjectPtr<UMovieSceneTrack> ParentTrack;
 
 
 #if WITH_EDITOR
@@ -135,4 +162,5 @@ private:
 
 
 	double GetDeltaTimeAsSeconds(const UE::MovieScene::FEvaluationHookParams& Params) const;
+
 };

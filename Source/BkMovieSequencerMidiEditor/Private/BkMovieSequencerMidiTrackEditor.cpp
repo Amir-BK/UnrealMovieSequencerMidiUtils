@@ -124,6 +124,7 @@ FKeyPropertyResult FBkMovieSceneMidiTrackEditor::AddNewMidiFile(FFrameNumber Key
 		{
 			auto* NewSection = Track->AddNewMidiTrackOnRow(MidiTrack, KeyTime, Index, InMidiFile);
 			Track->SetTrackRowDisplayName(FText::FromName(MidiTrack.TrackName), Index);
+			//Track->GetTrackRowDisplayName
 			KeyPropertyResult.SectionsCreated.Add(NewSection);
 			//NewSection->Midi = MidiFile;
 		}
@@ -171,10 +172,10 @@ FMidiSceneSectionPainter::FMidiSceneSectionPainter(UMovieSceneSection& InSection
 FText FMidiSceneSectionPainter::GetSectionTitle() const
 {
 	auto UDawSection = Cast<UBkMovieSceneMidiTrackSection>(&Section);
-	auto TrackName = UDawSection->MidiData.TrackName;
+	//Section.Get
 
 	
-	return FText::FromName(TrackName);
+	return UDawSection->GetSectionTitle();
 }
 
 float FMidiSceneSectionPainter::GetSectionHeight() const

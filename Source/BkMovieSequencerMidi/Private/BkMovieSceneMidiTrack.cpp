@@ -29,6 +29,7 @@ UBkMovieSceneMidiTrackSection* UBkMovieSceneMidiTrack::AddNewMidiTrackOnRow(FSeq
 
 	//add the section
 	UBkMovieSceneMidiTrackSection* NewEvaluationSection = Cast<UBkMovieSceneMidiTrackSection>(CreateNewSection());
+	NewEvaluationSection->ParentTrack = this;
 	NewEvaluationSection->MidiData = NewSectionMidiData;
 	NewEvaluationSection->Midi = MidiFile;
 	NewEvaluationSection->InitialPlacementOnRow(MidiSections, Time, DurationToUse.FrameNumber.Value, RowIndex);

@@ -1,6 +1,7 @@
 #include "BkMovieSceneMidiTrackSection.h"
 #include "Channels/MovieSceneChannelProxy.h"
 #include "LevelSequencePlayer.h"
+#include "MovieScene.h"
 //#include "MidiBroadcasters/MidiBroadcasterPlayHead.h"
 //#include "Tracks/MidiAssetSceneTrack.h"
 
@@ -167,28 +168,14 @@ TOptional<FFrameTime> UBkMovieSceneMidiTrackSection::GetOffsetTime() const
 	return TOptional<FFrameTime>();
 }
 
-EMovieSceneChannelProxyType UBkMovieSceneMidiTrackSection::CacheChannelProxy()
+FText UBkMovieSceneMidiTrackSection::GetSectionTitle() const
 {
-	FMovieSceneChannelProxyData Channels;
-
-	UBkMovieSceneMidiTrackSection* MutableThis = const_cast<UBkMovieSceneMidiTrackSection*>(this);
-	UMovieScene* MovieScene = MutableThis->GetTypedOuter<UMovieScene>();
-
-	FMovieSceneChannelMetaData MetaData;
-	MetaData.Name = FName("SoundVolume");
-	MetaData.DisplayText = NSLOCTEXT("MovieScene", "SoundVolume", "Sound Volume");
-	Channels.Add(SoundVolume, MetaData, TMovieSceneExternalValue<float>());
-
-	MetaData.Name = FName("PitchBend");
-	MetaData.DisplayText = NSLOCTEXT("MovieScene", "PitchBend", "Pitch Bend");
-	Channels.Add(PitchBend, MetaData, TMovieSceneExternalValue<float>());
-
-	//MetaData.Name = FName("MidiNotes");
-	//MetaData.DisplayText = NSLOCTEXT("MovieScene", "MidiNotes", "Midi Notes");
-	//Channels.Add(MidiNotes, MetaData, TMovieSceneExternalValue<FLinkedMidiEvents>());
+	if (!IsValid(ParentTrack))
+	{
+		return FText::FromString("No Parent Track");
+	}
 	
-	ChannelProxy = MakeShared<FMovieSceneChannelProxy>(MoveTemp(Channels));
-	return EMovieSceneChannelProxyType::Dynamic;
+	return ParentTrack->GetTrackRowDisplayName(TrackIndexInParentSession);
 }
 
 
