@@ -177,32 +177,3 @@ UMovieSceneSection* FMidiSceneSectionPainter::GetSectionObject()
 	return &Section;
 }
 
-FMidiSceneConductorSectionPainter::FMidiSceneConductorSectionPainter(UMovieSceneSection& InSection, TWeakPtr<ISequencer> InSequencer) : Section(InSection)
-{
-	TimeSlider = InSequencer.Pin()->GetTopTimeSliderWidget();
-}
-
-FText FMidiSceneConductorSectionPainter::GetSectionTitle() const
-{
-	return FText::GetEmpty();
-}
-
-float FMidiSceneConductorSectionPainter::GetSectionHeight() const
-{
-	return 50.0f;
-}
-
-int32 FMidiSceneConductorSectionPainter::OnPaintSection(FSequencerSectionPainter& InPainter) const
-{
-	FSlateDrawElement::MakeBox(InPainter.DrawElements, InPainter.LayerId, InPainter.SectionGeometry.ToPaintGeometry(), FAppStyle::GetBrush("Sequencer.Section.Background"), ESlateDrawEffect::None, FLinearColor::White);
-	//draw text saying "conductor"
-
-	FSlateDrawElement::MakeText(InPainter.DrawElements, InPainter.LayerId, InPainter.SectionGeometry.ToPaintGeometry(), FText::FromString("Conductor"), FAppStyle::GetFontStyle("NormalFont"), ESlateDrawEffect::None, FLinearColor::White);
-	
-	return int32();
-}
-
-UMovieSceneSection* FMidiSceneConductorSectionPainter::GetSectionObject()
-{
-	return &Section;
-}
