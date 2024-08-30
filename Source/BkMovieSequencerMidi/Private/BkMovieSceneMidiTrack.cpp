@@ -97,7 +97,6 @@ void UBkMovieSceneMidiTrack::ParseRawMidiEventsIntoNotesAndTracks(UMidiFile* InM
 								FSequencerMidiNotesTrack NewTrack;
 								FString TrackName = *InMidiFile->GetTrack(InternalTrackIndex)->GetName();
 								NewTrack.TrackName = FName(FString::Printf(TEXT("%d : %s"), VoiceHash, *TrackName)); //TODO
-								NewTrack.TrackColor = FLinearColor::MakeRandomSeededColor(VoiceHash);
 								NewTrack.Notes.Add(NewNote);
 								NewTrack.TrackIndexInMidiFile = InternalTrackIndex;
 								NewTrack.ChannelIndexInMidiFile = MidiEvent.GetMsg().GetStdChannel();
@@ -115,8 +114,6 @@ void UBkMovieSceneMidiTrack::ParseRawMidiEventsIntoNotesAndTracks(UMidiFile* InM
 	
 		}
 	}
-
-
 
 }
 
@@ -176,6 +173,30 @@ bool UBkMovieSceneMidiTrack::SupportsMultipleRows() const
 {
 	return true;
 }
+
+#if WITH_EDITOR
+inline EMovieSceneSectionMovedResult UBkMovieSceneMidiTrack::OnSectionMoved(UMovieSceneSection& Section, const FMovieSceneSectionMovedParams& Params)
+{
+
+
+	auto MovedSectionNewOffset = Section.GetInclusiveStartFrame();
+	auto MovedSectionNewEnd = Section.GetExclusiveEndFrame();
+
+	UE_LOG(LogTemp, Warning, TEXT("MovedSectionNewOffset: %d"), MovedSectionNewOffset.Value);
+
+	for (auto& MidiSection : MidiSections)
+	{
+		if (MidiSection != &Section)
+		{
+			MidiSection->SetStartFrame(MovedSectionNewOffset);
+			MidiSection->SetEndFrame(MovedSectionNewEnd);
+		}
+
+	}
+
+	return EMovieSceneSectionMovedResult::None;
+}
+#endif
 
 
 

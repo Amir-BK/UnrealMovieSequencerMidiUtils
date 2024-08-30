@@ -2,9 +2,8 @@
 #include "Channels/MovieSceneChannelProxy.h"
 #include "LevelSequencePlayer.h"
 #include "MovieScene.h"
-//#include "MidiBroadcasters/MidiBroadcasterPlayHead.h"
-//#include "Tracks/MidiAssetSceneTrack.h"
 
+#if WITH_EDITOR
 
 void UBkMovieSceneMidiTrackSection::MarkBars()
 {
@@ -12,9 +11,7 @@ void UBkMovieSceneMidiTrackSection::MarkBars()
 
 	FFrameRate FrameRate = MovieScene->GetTickResolution();
 
-	//FFrameTime SectionStartTime = GetInclusiveStartFrame();
-	//FFrameTime SectionEndTime = GetExclusiveEndFrame();
-
+	
 	const float SectionStartTimeSeconds = FrameRate.AsSeconds(GetInclusiveStartFrame());
 
 	const auto& BarMap = Midi->GetSongMaps()->GetBarMap();
@@ -35,7 +32,7 @@ void UBkMovieSceneMidiTrackSection::MarkBars()
 		auto MarkedFrameTest = FMovieSceneMarkedFrame(FFrameNumber(BarFrameTime.FrameNumber));
 		MarkedFrameTest.Label = FString::Printf(TEXT("Bar %d"), ++i);
 		MarkedFrameTest.Color = FLinearColor::Green;
-		MovieScene->AddMarkedFrame(MarkedFrameTest);
+		MarkedFrames.Add(MovieScene->AddMarkedFrame(MarkedFrameTest));
 
 		BarTick += SongsMap->SubdivisionToMidiTicks(EMidiClockSubdivisionQuantization::Bar, BarTick);
 	}
@@ -44,85 +41,57 @@ void UBkMovieSceneMidiTrackSection::MarkBars()
 
 void UBkMovieSceneMidiTrackSection::MarkSubdivisionsInRange()
 {
-	//UMovieScene* MovieScene = GetTypedOuter<UMovieScene>();
+	
+	UMovieScene* MovieScene = GetTypedOuter<UMovieScene>();
 
-	//FFrameRate FrameRate = MovieScene->GetTickResolution();
-
-	////FFrameTime SectionStartTime = GetInclusiveStartFrame();
-	////FFrameTime SectionEndTime = GetExclusiveEndFrame();
-
-	//const auto& BarMap = DAWSequencerData->HarmonixMidiFile->GetSongMaps()->GetBarMap();
-	//const float FirstTickOfFirstBar = BarMap.MusicTimestampBarToTick(0);
-	//const float LastTickOfLastBar = DAWSequencerData->HarmonixMidiFile->GetLastEventTick();
+	FFrameRate FrameRate = MovieScene->GetTickResolution();
 
 
-	//auto SelectionRange = MovieScene->GetSelectionRange();
+	const float SectionStartTimeSeconds = FrameRate.AsSeconds(GetInclusiveStartFrame());
 
-	//FFrameTime SectionStartTime = SelectionRange.GetLowerBoundValue();
-	//FFrameTime SectionEndTime = SelectionRange.GetUpperBoundValue();
-	//
+	const auto& BarMap = Midi->GetSongMaps()->GetBarMap();
+	const auto& SongsMap = Midi->GetSongMaps();
+	const float FirstTickOfFirstBar = BarMap.MusicTimestampBarToTick(0);
+	const float LastTickOfLastBar = Midi->GetLastEventTick();
+	
+	
+	auto SelectionRange = MovieScene->GetSelectionRange();
 
-	//MovieScene->DeleteMarkedFrames();
+	FFrameTime SectionStartTime = SelectionRange.GetLowerBoundValue();
+	FFrameTime SectionEndTime = SelectionRange.GetUpperBoundValue();
 
-	//auto RangeStartSeconds = FrameRate.AsSeconds(SectionStartTime);
-	//auto RangeEndSeconds = FrameRate.AsSeconds(SectionEndTime);
+	MovieScene->DeleteMarkedFrames();
 
-	//UE_LOG(LogTemp, Warning, TEXT("RangeStartSeconds %f, RangeEndSeconds %f"), RangeStartSeconds, RangeEndSeconds);
-
-	//float FirstTickInSelectionRange = DAWSequencerData->HarmonixMidiFile->GetSongMaps()->MsToTick(RangeStartSeconds * 1000);
-	//float LastTickInSelectionRange = DAWSequencerData->HarmonixMidiFile->GetSongMaps()->MsToTick(RangeEndSeconds * 1000);
-
-	//UE_LOG(LogTemp, Warning, TEXT("FirstTickInSelectionRange %f, LastTickInSelectionRange %f"), FirstTickInSelectionRange, LastTickInSelectionRange);
-
-	//const auto& SongsMap = DAWSequencerData->HarmonixMidiFile->GetSongMaps();
-
-	//float FirstSubdivisionInSelectionRange = SongsMap->QuantizeTickToNearestSubdivision(FMath::FloorToInt32(FirstTickInSelectionRange), EMidiFileQuantizeDirection::Up, MusicSubdivision);
-	//float LastSubdivisionInSelectionRange = SongsMap->QuantizeTickToNearestSubdivision(FMath::FloorToInt32(LastTickInSelectionRange), EMidiFileQuantizeDirection::Down, MusicSubdivision);
-	//	//DAWSequencerData->HarmonixMidiFile->GetSongMaps()->SubdivisionToMidiTicks(MusicSubdivision, FMath::FloorToInt32(LastTickInSelectionRange));
-
-	//UE_LOG(LogTemp, Warning, TEXT("FirstSubdivisionInSelectionRange %f, LastSubdivisionInSelectionRange %f"), FirstSubdivisionInSelectionRange, LastSubdivisionInSelectionRange);
-
-	//while (FirstSubdivisionInSelectionRange <= LastSubdivisionInSelectionRange)
-	//{
-	//
-	//	const auto& SubdivisionTime = DAWSequencerData->HarmonixMidiFile->GetSongMaps()->TickToMs(FirstSubdivisionInSelectionRange);
-	//	FFrameTime SubdivisionFrameTime = FFrameTime(FrameRate.AsFrameTime(SubdivisionTime * .001f));
-
-	//	auto MarkedFrameTest = FMovieSceneMarkedFrame(FFrameNumber(SubdivisionFrameTime.FrameNumber));
-	//	MarkedFrameTest.Label = FString::Printf(TEXT("Subdivision %d"), FirstSubdivisionInSelectionRange);
-	//	MarkedFrameTest.Color = FLinearColor::Gray;
-	//	MovieScene->AddMarkedFrame(MarkedFrameTest);
-
-	//	FirstSubdivisionInSelectionRange += DAWSequencerData->HarmonixMidiFile->GetSongMaps()->SubdivisionToMidiTicks(MusicSubdivision, FirstSubdivisionInSelectionRange);
-	//
-	//}
-
-	////float FirstTickOfSubdivision = DAWSequencerData->HarmonixMidiFile->GetSongMaps()->Ca
-
-	//float BarTick = DAWSequencerData->HarmonixMidiFile->GetSongMaps()->MsToTick(SectionStartTime.AsDecimal());
-	//float BarEndTick = DAWSequencerData->HarmonixMidiFile->GetSongMaps()->MsToTick(SectionEndTime.AsDecimal());
-
-	////float BarTick = DAWSequencerData->HarmonixMidiFile->GetSongMaps()->SubdivisionToMidiTicks(MusicSubdivision, SectionStartTime.AsDecimal());;
-	////float BarEndTick = DAWSequencerData->HarmonixMidiFile->GetSongMaps()->SubdivisionToMidiTicks(MusicSubdivision, SectionEndTime.AsDecimal());;
-
-	//while (BarTick <= BarEndTick)
-	//{
-	//	const auto& BarTime = DAWSequencerData->HarmonixMidiFile->GetSongMaps()->TickToMs(BarTick);
-	//	FFrameTime BarFrameTime = FFrameTime(FrameRate.AsFrameTime(BarTime * .001f));
+	auto RangeStartSeconds = FrameRate.AsSeconds(SectionStartTime);
+	auto RangeEndSeconds = FrameRate.AsSeconds(SectionEndTime);
 
 
-	//	auto MarkedFrameTest = FMovieSceneMarkedFrame(FFrameNumber(BarFrameTime.FrameNumber));
-	//	//MarkedFrameTest.Label = FString::Printf(TEXT("Bar %d"), ++i);
-	//	MarkedFrameTest.Color = FLinearColor::Gray;
-	//	MovieScene->AddMarkedFrame(MarkedFrameTest);
+	float FirstTickInSelectionRange = SongsMap->MsToTick(RangeStartSeconds * 1000);
+	float LastTickInSelectionRange = SongsMap->MsToTick(RangeEndSeconds * 1000);
 
-	//	BarTick += DAWSequencerData->HarmonixMidiFile->GetSongMaps()->SubdivisionToMidiTicks(MusicSubdivision, BarTick);
-	//}
+	float FirstSubdivisionInSelectionRange = SongsMap->QuantizeTickToNearestSubdivision(FMath::FloorToInt32(FirstTickInSelectionRange), EMidiFileQuantizeDirection::Up, MusicSubdivision);
+	float LastSubdivisionInSelectionRange = SongsMap->QuantizeTickToNearestSubdivision(FMath::FloorToInt32(LastTickInSelectionRange), EMidiFileQuantizeDirection::Down, MusicSubdivision);
+
+	while (FirstSubdivisionInSelectionRange <= LastSubdivisionInSelectionRange)
+	{
+	
+		const auto& SubdivisionTime = SongsMap->TickToMs(FirstSubdivisionInSelectionRange);
+		FFrameTime SubdivisionFrameTime = FFrameTime(FrameRate.AsFrameTime(SubdivisionTime * .001f));
+
+		auto MarkedFrameTest = FMovieSceneMarkedFrame(FFrameNumber(SubdivisionFrameTime.FrameNumber));
+		MarkedFrameTest.Label = FString::Printf(TEXT("Subdivision %d"), FirstSubdivisionInSelectionRange);
+		MarkedFrameTest.Color = FLinearColor::Gray;
+		MovieScene->AddMarkedFrame(MarkedFrameTest);
+
+		FirstSubdivisionInSelectionRange += SongsMap->SubdivisionToMidiTicks(MusicSubdivision, FirstSubdivisionInSelectionRange);
+	
+	}
+
 }
 
 void UBkMovieSceneMidiTrackSection::MarkNotesInRange()
 {
-	/*UMovieScene* MovieScene = GetTypedOuter<UMovieScene>();
+	UMovieScene* MovieScene = GetTypedOuter<UMovieScene>();
 
 	FFrameRate FrameRate = MovieScene->GetTickResolution();
 
@@ -131,29 +100,30 @@ void UBkMovieSceneMidiTrackSection::MarkNotesInRange()
 	FFrameTime SectionStartTime = SelectionRange.GetLowerBoundValue();
 	FFrameTime SectionEndTime = SelectionRange.GetUpperBoundValue();
 
-	const auto& BarMap = DAWSequencerData->HarmonixMidiFile->GetSongMaps()->GetBarMap();
+	const auto& BarMap = Midi->GetSongMaps()->GetBarMap();
+	const auto& SongsMap = Midi->GetSongMaps();
+	
 
 	MovieScene->DeleteMarkedFrames();
 
-	auto LinkedNotesTracks = DAWSequencerData->LinkedNoteDataMap;
-	const auto& Track = LinkedNotesTracks[TrackIndexInParentSession];
-	auto TrackColor = DAWSequencerData->GetTracksDisplayOptions(TrackIndexInParentSession).trackColor;
-
-	for (const auto& Note : Track.LinkedNotes)
+	for (const auto& Note : MidiData.Notes)
 	{
-		const auto& NoteTime = DAWSequencerData->HarmonixMidiFile->GetSongMaps()->TickToMs(Note.StartTick);
-
+		const auto& NoteTime = SongsMap->TickToMs(Note.StartTick);
 		FFrameTime NoteFrameTime = FFrameTime(FrameRate.AsFrameTime(NoteTime * .001f));
 
 		if (NoteFrameTime >= SectionStartTime && NoteFrameTime <= SectionEndTime)
 		{
 			auto MarkedFrameTest = FMovieSceneMarkedFrame(FFrameNumber(NoteFrameTime.FrameNumber));
-			MarkedFrameTest.Comment = FString::Printf(TEXT("Note %d"), Note.pitch);
-			MarkedFrameTest.Color = TrackColor;
+			MarkedFrameTest.Label = FString::Printf(TEXT("Note %d"), Note.NoteNumber);
+			MarkedFrameTest.Color = NoteColor;
 			MovieScene->AddMarkedFrame(MarkedFrameTest);
 		}
-	}*/
+
+	}
+
 }
+
+#endif // WITH_EDITOR
 
 UBkMovieSceneMidiTrackSection::UBkMovieSceneMidiTrackSection(const FObjectInitializer& ObjInit) : Super(ObjInit)
 {

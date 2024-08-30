@@ -35,6 +35,8 @@ class BKMOVIESEQUENCERMIDI_API UBkMovieSceneMidiTrackSection : public UMovieScen
 
 protected:
 
+#if WITH_EDITOR //The midi section is only used in the editor to mark frames in the sequencer for animation purposes
+
 	//Creates marked frames for all bars in the song
 	UFUNCTION(CallInEditor, Category = "Midi")
 	void MarkBars();
@@ -47,21 +49,16 @@ protected:
 	UFUNCTION(CallInEditor, Category = "Midi")
 	void MarkNotesInRange();
 
+#endif // WITH_EDITOR
+
+
 	UPROPERTY()
 	UBkMovieSceneMidiTrackSection* This = nullptr;
-
-	UPROPERTY(EditAnywhere, Category = "Midi", BlueprintReadWrite)
-	float PlayRate = 1.0f;
 
 	UPROPERTY(EditAnywhere, Category = "Midi", meta = (InvalidEnumValues = "Beat, None"))
 	EMidiClockSubdivisionQuantization MusicSubdivision = EMidiClockSubdivisionQuantization::QuarterNote;
 
-	////when true, the section will only mark the frames that are within the selection range
-	//UPROPERTY(EditAnywhere, Category = "Midi")
-	//bool bMarkOnlyInSelection = false;
 
-
-	double SectionLocalCurrentTime=0;
 
 
 public:
@@ -69,25 +66,22 @@ public:
 	UPROPERTY()
 	int TrackIndexInParentSession = INDEX_NONE;
 
-	//UPROPERTY()
-	//FMovieSceneFloatChannel SoundVolume;
-
-	//UPROPERTY()
-	//FMovieSceneFloatChannel PitchBend;
 
 	UPROPERTY()
 	TObjectPtr<UMidiFile> Midi;
 
+	UPROPERTY()
+	TArray<int32> MarkedFrames;
+
 
 	UPROPERTY()
 	FSequencerMidiNotesTrack MidiData;
-	
 
-	//UPROPERTY()
-	//FMovieSceneMidiTrackChannel MidiNotes;
-
+#if WITH_EDITORONLY_DATA
 	UPROPERTY(EditAnywhere, Category = "Midi")
-	FString MidiFileName = "Midi Track Name";
+	FLinearColor NoteColor = FLinearColor::Red;
+#endif // WITH_EDITOR_ONLY_DATA
+
 
 
 

@@ -1,21 +1,14 @@
 #include "BkMovieSequencerMidiTrackEditor.h"
-#include "ITimeSlider.h"
-//#include "M2SoundGraphData.h"
 #include "SequencerSectionPainter.h"
 #include "EditorStyleSet.h"
-#include "MVVM/Views/ViewUtilities.h"
 #include "TimeToPixel.h"
 #include "ISequencer.h"
 
 #include "BkMovieSceneMidiTrackSection.h"
 
-//#include <Sequencer/UndawMidiMovieSceneTrackSection.h>
 
 FBkMovieSceneMidiTrackEditor::FBkMovieSceneMidiTrackEditor(TSharedRef<ISequencer> InSequencer) : FMovieSceneTrackEditor(InSequencer)
-
 {
-	//Sequencer = InSequencer;
-
 }
 
 TSharedRef<ISequencerTrackEditor> FBkMovieSceneMidiTrackEditor::CreateTrackEditor(TSharedRef<ISequencer> InSequencer)
@@ -26,7 +19,6 @@ TSharedRef<ISequencerTrackEditor> FBkMovieSceneMidiTrackEditor::CreateTrackEdito
 
 bool FBkMovieSceneMidiTrackEditor::HandleAssetAdded(UObject* Asset, const FGuid& TargetObjectGuid)
 {
-	//GetSequencer()->GetTopTimeSliderWidget()->SetColorAndOpacity
 
 	if (Asset->IsA<UMidiFile>())
 	{
@@ -55,11 +47,7 @@ void FBkMovieSceneMidiTrackEditor::BuildAddTrackMenu(FMenuBuilder& MenuBuilder)
 }
 TSharedPtr<SWidget> FBkMovieSceneMidiTrackEditor::BuildOutlinerEditWidget(const FGuid& ObjectBinding, UMovieSceneTrack* Track, const FBuildEditWidgetParams& Params)
 {
-	//auto Timeline = Sequencer->GetTopTimeSliderWidget();
-	//Timeline->SetForegroundColor(FLinearColor::Blue);
-
-	
-	return UE::Sequencer::MakeAddButton(INVTEXT("MIDI"), FOnGetContent::CreateSP(this, &FBkMovieSceneMidiTrackEditor::BuildMidiSubmenu, FOnAssetSelected::CreateRaw(this, &FBkMovieSceneMidiTrackEditor::OnDawAssetSelected, Track), FOnAssetEnterPressed::CreateRaw(this, &FBkMovieSceneMidiTrackEditor::OnDawAssetEnterPressed, Track)), Params.ViewModel);
+	return SNullWidget::NullWidget;
 }
 TSharedRef<ISequencerSection> FBkMovieSceneMidiTrackEditor::MakeSectionInterface(UMovieSceneSection& SectionObject, UMovieSceneTrack& Track, FGuid ObjectBinding)
 {
@@ -85,7 +73,6 @@ void FBkMovieSceneMidiTrackEditor::OnDawAssetEnterPressed(const TArray<FAssetDat
 
 FKeyPropertyResult FBkMovieSceneMidiTrackEditor::AddNewMidiFile(FFrameNumber KeyTime, UMidiFile* InMidiFile, UBkMovieSceneMidiTrack* Track, int32 RowIndex)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Add New Midi Sequence"));
 	
 	FKeyPropertyResult KeyPropertyResult;
 
@@ -101,22 +88,15 @@ FKeyPropertyResult FBkMovieSceneMidiTrackEditor::AddNewMidiFile(FFrameNumber Key
 
 	if (!Track)
 	{
-		//TrackResult = ;
-		//TrackResult = FindOrCreateRootTrack<UBkMovieSceneMidiTrack>();
-		//Track = TrackResult.Track;
-		Track = FocusedMovieScene->AddTrack<UBkMovieSceneMidiTrack>();
 
-		if (Track)
-		{
-			//
-		}
+		Track = FocusedMovieScene->AddTrack<UBkMovieSceneMidiTrack>();
+		//TODO: Check if midi file already exists, maybe? although it is perfectly acceptable for the user to add the same midi file to multiple tracks
+
 	}
 
 	if (ensure(Track))
 	{
-		
-		
-		//Track->DAWSequencerData = DAWData;
+
 		Track->Modify();
 		Track->SetDisplayName(FText::FromName(InMidiFile->GetFName()));
 		Track->ParseRawMidiEventsIntoNotesAndTracks(InMidiFile);
@@ -125,33 +105,13 @@ FKeyPropertyResult FBkMovieSceneMidiTrackEditor::AddNewMidiFile(FFrameNumber Key
 		{
 			auto* NewSection = Track->AddNewMidiTrackOnRow(MidiTrack, KeyTime, Index, InMidiFile);
 			Track->SetTrackRowDisplayName(FText::FromName(MidiTrack.TrackName), Index);
-			//Track->GetTrackRowDisplayName
+			NewSection->NoteColor = FLinearColor::MakeRandomSeededColor(Index);
 			KeyPropertyResult.SectionsCreated.Add(NewSection);
-			//NewSection->Midi = MidiFile;
+
 		}
 		GetSequencer()->OnAddTrack(Track, FGuid());
 		
-
-	
-		
-		//for (size_t trackID = 0; trackID < DAWData->M2TrackMetadata.Num(); trackID++)
-		//{
-		//	auto SectionMetaData = DAWData->M2TrackMetadata[trackID];
-		//	// Create a new section
-		//	auto* NewSection = Track->AddNewDAWDataOnRow(DAWData, KeyTime, trackID);
-		//	
-		//	//NewSection->DAWSequencerData = Sound;
-		//	if (TrackResult.bWasCreated)
-		//	{
-		//		//NewSection->
-		//		Track->SetTrackRowDisplayName(FText::FromString(SectionMetaData.trackName), trackID);
-		//		if (GetSequencer().IsValid())
-		//		{
-		//			GetSequencer()->OnAddTrack(Track, FGuid());
-		//		}
-		//	}
-			//KeyPropertyResult.SectionsCreated.Add(NewSection);
-		}
+	}
 
 
 		KeyPropertyResult.bTrackModified = true;
@@ -204,7 +164,7 @@ int32 FMidiSceneSectionPainter::OnPaintSection(FSequencerSectionPainter& InPaint
 			float StartPixel = TimeToPixelConverter.SecondsToPixel(NoteStartTime * .001 + +SectionStartTime);
 			float EndPixel = TimeToPixelConverter.SecondsToPixel(NoteEndTime * .001f + +SectionStartTime);
 			//draw line a line from start time to end time at pitch height
-			FSlateDrawElement::MakeLines(InPainter.DrawElements, InPainter.LayerId, InPainter.SectionGeometry.ToPaintGeometry(), TArray<FVector2D>{FVector2D(StartPixel, 127 - Note.NoteNumber), FVector2D(EndPixel, 127 - Note.NoteNumber)}, ESlateDrawEffect::None, UDawSection->MidiData.TrackColor, false);
+			FSlateDrawElement::MakeLines(InPainter.DrawElements, InPainter.LayerId, InPainter.SectionGeometry.ToPaintGeometry(), TArray<FVector2D>{FVector2D(StartPixel, 127 - Note.NoteNumber), FVector2D(EndPixel, 127 - Note.NoteNumber)}, ESlateDrawEffect::None, UDawSection->NoteColor, false);
 		}
 	
 
@@ -234,10 +194,10 @@ float FMidiSceneConductorSectionPainter::GetSectionHeight() const
 
 int32 FMidiSceneConductorSectionPainter::OnPaintSection(FSequencerSectionPainter& InPainter) const
 {
-	FSlateDrawElement::MakeBox(InPainter.DrawElements, InPainter.LayerId, InPainter.SectionGeometry.ToPaintGeometry(), FEditorStyle::GetBrush("Sequencer.Section.Background"), ESlateDrawEffect::None, FLinearColor::White);
+	FSlateDrawElement::MakeBox(InPainter.DrawElements, InPainter.LayerId, InPainter.SectionGeometry.ToPaintGeometry(), FAppStyle::GetBrush("Sequencer.Section.Background"), ESlateDrawEffect::None, FLinearColor::White);
 	//draw text saying "conductor"
 
-	FSlateDrawElement::MakeText(InPainter.DrawElements, InPainter.LayerId, InPainter.SectionGeometry.ToPaintGeometry(), FText::FromString("Conductor"), FEditorStyle::GetFontStyle("NormalFont"), ESlateDrawEffect::None, FLinearColor::White);
+	FSlateDrawElement::MakeText(InPainter.DrawElements, InPainter.LayerId, InPainter.SectionGeometry.ToPaintGeometry(), FText::FromString("Conductor"), FAppStyle::GetFontStyle("NormalFont"), ESlateDrawEffect::None, FLinearColor::White);
 	
 	return int32();
 }

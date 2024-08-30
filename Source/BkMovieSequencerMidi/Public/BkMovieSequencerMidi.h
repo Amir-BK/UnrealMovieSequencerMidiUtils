@@ -31,9 +31,6 @@ struct FSequencerMidiNotesTrack
 	UPROPERTY(EditAnywhere, Category = "Midi")
 	FName TrackName = NAME_None;
 
-	UPROPERTY(EditAnywhere, Category = "Midi")
-	FLinearColor TrackColor = FLinearColor::White;
-
 	UPROPERTY()
 	int32 TrackIndexInMidiFile = INDEX_NONE;
 

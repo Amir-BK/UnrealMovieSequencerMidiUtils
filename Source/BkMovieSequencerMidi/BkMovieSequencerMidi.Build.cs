@@ -4,7 +4,7 @@ using UnrealBuildTool;
 
 public class BkMovieSequencerMidi : ModuleRules
 {
-	private bool bStrictIncludesCheck = true;
+	private bool bStrictIncludesCheck = false;
 	public BkMovieSequencerMidi(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;

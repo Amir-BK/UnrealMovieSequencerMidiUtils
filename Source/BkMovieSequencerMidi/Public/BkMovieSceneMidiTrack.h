@@ -6,8 +6,6 @@
 #include "HarmonixMidi/MidiFile.h"
 #include "BkMovieSequencerMidi.h"
 #include "BkMovieSceneMidiTrackSection.h"
-
-//#include "M2SoundGraphData.h"
 #include "BkMovieSceneMidiTrack.generated.h"
 
 
@@ -17,13 +15,6 @@ UCLASS()
 class BKMOVIESEQUENCERMIDI_API UBkMovieSceneMidiTrack : public UMovieSceneNameableTrack
 {
 	GENERATED_BODY()
-
-private:
-
-public:
-
-	//TObjectPtr<UDAWSequencerData> DAWSequencerData;
-
 
 
 public:
@@ -49,33 +40,11 @@ public:
 	/**
 	 * we override this function to update the start frame of all the midi sections when the track is moved
 	 */
-	virtual EMovieSceneSectionMovedResult OnSectionMoved(UMovieSceneSection& Section, const FMovieSceneSectionMovedParams& Params) override
-	{
-		
-
-		auto MovedSectionNewOffset = Section.GetInclusiveStartFrame();
-		auto MovedSectionNewEnd = Section.GetExclusiveEndFrame();
-
-		UE_LOG(LogTemp, Warning, TEXT("MovedSectionNewOffset: %d"), MovedSectionNewOffset.Value);
-
-		for (auto& MidiSection : MidiSections)
-		{
-			if (MidiSection != &Section)
-			{
-			MidiSection->SetStartFrame(MovedSectionNewOffset);
-			MidiSection->SetEndFrame(MovedSectionNewEnd);
-			}
-			
-		}
-		
-		return EMovieSceneSectionMovedResult::None;
-	}
+	virtual EMovieSceneSectionMovedResult OnSectionMoved(UMovieSceneSection& Section, const FMovieSceneSectionMovedParams& Params) override;
 
 #endif
 
 	//END UMovieSceneTrack Interface
-
-	//const TMap<int32, FSequencerMidiNotesTrack>* GetMidiTracks() { return *MidiTracks; }
 
 	UPROPERTY()
 	TMap<int32, FSequencerMidiNotesTrack> MidiTracks;
@@ -83,13 +52,12 @@ public:
 
 	private:
 	
+		/** List of all root audio sections */
+	UPROPERTY()
+	TArray<TObjectPtr<UMovieSceneSection>> MidiSections;
 
-			/** List of all root audio sections */
-		UPROPERTY()
-		TArray<TObjectPtr<UMovieSceneSection>> MidiSections;
-
-		UPROPERTY()
-		TObjectPtr<UMidiFile> MidiFile;
+	UPROPERTY()
+	TObjectPtr<UMidiFile> MidiFile;
 
 
 	
