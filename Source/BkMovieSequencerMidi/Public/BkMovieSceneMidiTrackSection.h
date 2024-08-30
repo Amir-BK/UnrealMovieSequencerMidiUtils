@@ -13,10 +13,11 @@
 //#include "MidiBroadcasters/MidiBroadcasterPlayHead.h"
 //#include "MidiObjects/MidiAsset.h"
 #include "Sections/MovieSceneHookSection.h"
+#include "BkMovieSequencerMidi.h"
 //#include "M2SoundGraphData.h"
 #include <HarmonixMidi/SongMaps.h>
 
-#include "BkMovieSceneMidiTrackTrackSection.generated.h"
+#include "BkMovieSceneMidiTrackSection.generated.h"
 
 
 class UUndawSequenceMovieSceneTrack;
@@ -74,6 +75,10 @@ public:
 
 	UPROPERTY()
 	TObjectPtr<UMidiFile> Midi;
+
+
+	UPROPERTY()
+	FSequencerMidiNotesTrack MidiData;
 	
 
 	//UPROPERTY()

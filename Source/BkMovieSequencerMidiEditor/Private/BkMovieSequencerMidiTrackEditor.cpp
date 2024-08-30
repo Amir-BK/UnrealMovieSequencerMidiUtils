@@ -7,7 +7,7 @@
 #include "TimeToPixel.h"
 #include "ISequencer.h"
 
-#include <BkMovieSceneMidiTrackTrackSection.h>
+#include "BkMovieSceneMidiTrackSection.h"
 
 //#include <Sequencer/UndawMidiMovieSceneTrackSection.h>
 
@@ -82,9 +82,9 @@ void FBkMovieSceneMidiTrackEditor::OnDawAssetEnterPressed(const TArray<FAssetDat
 {
 }
 
-FKeyPropertyResult FBkMovieSceneMidiTrackEditor::AddNewMidiFile(FFrameNumber KeyTime, UMidiFile* MidiFile, UBkMovieSceneMidiTrack* Track, int32 RowIndex)
+FKeyPropertyResult FBkMovieSceneMidiTrackEditor::AddNewMidiFile(FFrameNumber KeyTime, UMidiFile* InMidiFile, UBkMovieSceneMidiTrack* Track, int32 RowIndex)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Add New Daw Sequence"));
+	UE_LOG(LogTemp, Warning, TEXT("Add New Midi Sequence"));
 	
 	FKeyPropertyResult KeyPropertyResult;
 
@@ -117,9 +117,17 @@ FKeyPropertyResult FBkMovieSceneMidiTrackEditor::AddNewMidiFile(FFrameNumber Key
 		
 		//Track->DAWSequencerData = DAWData;
 		Track->Modify();
-		Track->SetDisplayName(FText::FromName(MidiFile->GetFName()));
-		Track->ParseRawMidiEventsIntoNotesAndTracks(MidiFile);
-		Track->CreateSectionsFromMidiTracks();
+		Track->SetDisplayName(FText::FromName(InMidiFile->GetFName()));
+		Track->ParseRawMidiEventsIntoNotesAndTracks(InMidiFile);
+
+		for (auto& [Index, MidiTrack] : Track->MidiTracks)
+		{
+			auto* NewSection = Track->AddNewMidiTrackOnRow(MidiTrack, KeyTime, Index, InMidiFile);
+			KeyPropertyResult.SectionsCreated.Add(NewSection);
+			//NewSection->Midi = MidiFile;
+		}
+		GetSequencer()->OnAddTrack(Track, FGuid());
+		
 
 	
 		
@@ -197,33 +205,8 @@ int32 FMidiSceneSectionPainter::OnPaintSection(FSequencerSectionPainter& InPaint
 	const FTimeToPixel& TimeToPixelConverter = InPainter.GetTimeConverter();
 	FFrameRate TickResolution = TimeToPixelConverter.GetTickResolution();
 	auto UDawSection = Cast<UBkMovieSceneMidiTrackSection>(&Section);
-	//auto SequencerData = UDawSection->DAWSequencerData;
-	if (false)
-	{
 
-		//const auto& BarMap = SequencerData->HarmonixMidiFile->GetSongMaps()->GetBarMap();
-
-		////draw 40 bars I'm lazy
-		//for (int i = 0; i < 40; i++)
-		//{
-		//	const auto& Bar = BarMap.MusicTimestampBarToTick(i);
-		//	const auto& BarTime = SequencerData->HarmonixMidiFile->GetSongMaps()->TickToMs(Bar);
-
-		//	//FFrameTime BarFrameTime = FFrameTime(FrameRate.AsFrameTime(BarTime * .001f));
-		//	float BarPixel = TimeToPixelConverter.SecondsToPixel(BarTime * .001f);
-
-		//	//auto MarkedFrameTest = FMovieSceneMarkedFrame(FFrameNumber(BarFrameTime.FrameNumber));
-		//	//MarkedFrameTest.Label = FString::Printf(TEXT("Bar %d"), i);
-		//	//MarkedFrameTest.Color = FLinearColor::Green;
-		//	// 
-		//	// 
-		//	//MovieScene->AddMarkedFrame(MarkedFrameTest);
-
-		//	FSlateDrawElement::MakeLines(InPainter.DrawElements, InPainter.LayerId, InPainter.SectionGeometry.ToPaintGeometry(), TArray<FVector2D>{FVector2D(BarPixel, 0), FVector2D(BarPixel, 150.0f)}, ESlateDrawEffect::None, FLinearColor::White, false);
-		//}
-
-
-
+		
 		//FSlateDrawElement::MakeText(InPainter.DrawElements, InPainter.LayerId, InPainter.SectionGeometry.ToPaintGeometry(), FText::FromString(SequencerData->GetFName().ToString()), FEditorStyle::GetFontStyle("NormalFont"), ESlateDrawEffect::None, FLinearColor::White);
 		//auto LinkedNotesTracks = SequencerData->LinkedNoteDataMap;
 		//const auto& Track = LinkedNotesTracks[UDawSection->TrackIndexInParentSession];
@@ -238,8 +221,19 @@ int32 FMidiSceneSectionPainter::OnPaintSection(FSequencerSectionPainter& InPaint
 		//	//draw line a line from start time to end time
 		//	FSlateDrawElement::MakeLines(InPainter.DrawElements, InPainter.LayerId, InPainter.SectionGeometry.ToPaintGeometry(), TArray<FVector2D>{FVector2D(StartPixel, 127 - Note.pitch), FVector2D(EndPixel, 127 - Note.pitch)}, ESlateDrawEffect::None, TrackColor, false);
 		//}
+	const auto& MidiSongsMap = UDawSection->Midi->GetSongMaps();
+	const float SectionOffset = 0.f;
+		for (const auto& Note : UDawSection->MidiData.Notes)
+		{
+			const float NoteStartTime = MidiSongsMap->TickToMs(Note.StartTick) + SectionOffset;
+			const float NoteEndTime = MidiSongsMap->TickToMs(Note.EndTick) + SectionOffset;
+			const float NoteOffset = (NoteStartTime * .001f);
+			float StartPixel = TimeToPixelConverter.SecondsToPixel(NoteStartTime * .001);
+			float EndPixel = TimeToPixelConverter.SecondsToPixel(NoteEndTime * .001f);
+			//draw line a line from start time to end time
+			FSlateDrawElement::MakeLines(InPainter.DrawElements, InPainter.LayerId, InPainter.SectionGeometry.ToPaintGeometry(), TArray<FVector2D>{FVector2D(StartPixel, 127 - Note.NoteNumber), FVector2D(EndPixel, 127 - Note.NoteNumber)}, ESlateDrawEffect::None, UDawSection->MidiData.TrackColor, false);
+		}
 	
-	}
 
 	InPainter.PaintSectionBackground();
 	return InPainter.LayerId;

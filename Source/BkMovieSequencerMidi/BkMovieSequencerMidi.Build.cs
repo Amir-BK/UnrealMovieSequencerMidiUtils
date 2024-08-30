@@ -48,7 +48,7 @@ public class BkMovieSequencerMidi : ModuleRules
 				"UMG",
 				"Projects",
 				"InputCore",
-				"AudioWidgets"
+				
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);

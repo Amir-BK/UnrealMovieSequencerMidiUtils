@@ -90,7 +90,7 @@ private:
 protected:
 
 	/** Delegate for AnimatablePropertyChanged in HandleAssetAdded for sounds */
-	FKeyPropertyResult AddNewMidiFile(FFrameNumber KeyTime, class UMidiFile* MidiFile, UBkMovieSceneMidiTrack* Track, int32 RowIndex);
+	FKeyPropertyResult AddNewMidiFile(FFrameNumber KeyTime, class UMidiFile* InMidiFile, UBkMovieSceneMidiTrack* Track, int32 RowIndex);
 
 	//TSharedPtr<ISequencer> Sequencer;
 };

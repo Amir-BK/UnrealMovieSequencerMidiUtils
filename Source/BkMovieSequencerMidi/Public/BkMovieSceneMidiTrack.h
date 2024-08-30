@@ -4,46 +4,13 @@
 
 #include "MovieSceneNameableTrack.h"
 #include "HarmonixMidi/MidiFile.h"
-
+#include "BkMovieSequencerMidi.h"
+#include "BkMovieSceneMidiTrackSection.h"
 
 //#include "M2SoundGraphData.h"
 #include "BkMovieSceneMidiTrack.generated.h"
 
-USTRUCT()
-struct FSequencerMidiNote
-{
-	GENERATED_BODY()
 
-	UPROPERTY()
-	int32 NoteNumber = INDEX_NONE;
-
-	UPROPERTY()
-	float StartTick = 0;
-
-	UPROPERTY()
-	float EndTick = 0;
-};
-
-USTRUCT()
-struct FSequencerMidiNotesTrack
-{
-	GENERATED_BODY()
-
-	UPROPERTY()
-	TArray<FSequencerMidiNote> Notes;
-
-	UPROPERTY(EditAnywhere, Category = "Midi")
-	FName TrackName = NAME_None;
-
-	UPROPERTY(EditAnywhere, Category = "Midi")
-	FLinearColor TrackColor = FLinearColor::White;
-
-	UPROPERTY()
-	int32 TrackIndexInMidiFile = INDEX_NONE;
-
-	UPROPERTY()
-	int32 ChannelIndexInMidiFile = INDEX_NONE;
-};
 
 //represents an entire midi file where each of the internal tracks are represented as sections
 UCLASS()
@@ -61,7 +28,7 @@ public:
 
 public:
 
-	virtual UMovieSceneSection* AddNewDAWDataOnRow(UObject* DAWData, FFrameNumber Time, int32 RowIndex);
+	virtual UBkMovieSceneMidiTrackSection* AddNewMidiTrackOnRow(FSequencerMidiNotesTrack& MidiDataPtr, FFrameNumber Time, int32 RowIndex, UMidiFile* InMidiFile);
 
 	virtual void ParseRawMidiEventsIntoNotesAndTracks(UMidiFile* InMidiFile);
 	virtual void CreateSectionsFromMidiTracks();
@@ -80,19 +47,24 @@ public:
 
 	//END UMovieSceneTrack Interface
 
+	//const TMap<int32, FSequencerMidiNotesTrack>* GetMidiTracks() { return *MidiTracks; }
+
+	UPROPERTY()
+	TMap<int32, FSequencerMidiNotesTrack> MidiTracks;
 
 
 	private:
-		private:
+	
 
 			/** List of all root audio sections */
-			UPROPERTY()
-			TArray<TObjectPtr<UMovieSceneSection>> DAWSections;
+		UPROPERTY()
+		TArray<TObjectPtr<UMovieSceneSection>> MidiSections;
 
-			UPROPERTY()
-			TObjectPtr<UMidiFile> MidiFile;
+		UPROPERTY()
+		TObjectPtr<UMidiFile> MidiFile;
 
-			UPROPERTY()
-			TMap<int32, FSequencerMidiNotesTrack> MidiTracks;
+
+	
+
 
 };

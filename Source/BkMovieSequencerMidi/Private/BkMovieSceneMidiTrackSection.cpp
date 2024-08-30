@@ -1,4 +1,4 @@
-#include "BkMovieSceneMidiTrackTrackSection.h"
+#include "BkMovieSceneMidiTrackSection.h"
 #include "Channels/MovieSceneChannelProxy.h"
 #include "LevelSequencePlayer.h"
 //#include "MidiBroadcasters/MidiBroadcasterPlayHead.h"

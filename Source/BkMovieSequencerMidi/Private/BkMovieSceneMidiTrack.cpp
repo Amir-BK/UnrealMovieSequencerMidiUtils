@@ -3,35 +3,42 @@
 #include "MovieScene.h"
 
 
-#include "BkMovieSceneMidiTrackTrackSection.h"
+#include "BkMovieSceneMidiTrackSection.h"
 
 
-UMovieSceneSection* UBkMovieSceneMidiTrack::AddNewDAWDataOnRow(UObject* DAWData, FFrameNumber Time, int32 RowIndex)
+UBkMovieSceneMidiTrackSection* UBkMovieSceneMidiTrack::AddNewMidiTrackOnRow(FSequencerMidiNotesTrack& InMidiDataPtr, FFrameNumber Time, int32 RowIndex, UMidiFile* InMidiFile)
 {
-	
-	check(DAWData);
+
+	//check(DAWData);
+
+	//MidiData = InMidiDataPtr;
+	FSequencerMidiNotesTrack& NewSectionMidiData = MidiTracks[RowIndex];
+	MidiFile = InMidiFile;
 
 	FFrameRate FrameRate = GetTypedOuter<UMovieScene>()->GetTickResolution();
 	FFrameTime DurationToUse = 1.f * FrameRate; // if all else fails, use 1 second duration
 
 
+
 	//const float Duration = DAWData->SequenceDuration * .001f;
-	const float Duration = 100.0f;
+	const float Duration = MidiFile->GetSongMaps()->GetSongLengthMs() * .001f;
 
 	DurationToUse = Duration * FrameRate;
 
 
-	
+
 	//add the section
 	UBkMovieSceneMidiTrackSection* NewEvaluationSection = Cast<UBkMovieSceneMidiTrackSection>(CreateNewSection());
-	NewEvaluationSection->InitialPlacementOnRow(DAWSections, Time, DurationToUse.FrameNumber.Value, RowIndex);
+	NewEvaluationSection->MidiData = NewSectionMidiData;
+	NewEvaluationSection->Midi = MidiFile;
+	NewEvaluationSection->InitialPlacementOnRow(MidiSections, Time, DurationToUse.FrameNumber.Value, RowIndex);
 	//NewEvaluationSection->DAWSequencerData = DAWData;
 	NewEvaluationSection->TrackIndexInParentSession = RowIndex;
 
-	DAWSections.Add(NewEvaluationSection);
+	MidiSections.Add(NewEvaluationSection);
 
 	return NewEvaluationSection;
-}
+};
 
 void UBkMovieSceneMidiTrack::ParseRawMidiEventsIntoNotesAndTracks(UMidiFile* InMidiFile)
 {
@@ -126,7 +133,7 @@ UMovieSceneSection* UBkMovieSceneMidiTrack::CreateNewSection()
 
 void UBkMovieSceneMidiTrack::AddSection(UMovieSceneSection& Section)
 {
-	DAWSections.Add(Cast<UBkMovieSceneMidiTrackSection>(&Section));
+	MidiSections.Add(Cast<UBkMovieSceneMidiTrackSection>(&Section));
 }
 
 bool UBkMovieSceneMidiTrack::SupportsType(TSubclassOf<UMovieSceneSection> SectionClass) const
@@ -136,30 +143,30 @@ bool UBkMovieSceneMidiTrack::SupportsType(TSubclassOf<UMovieSceneSection> Sectio
 
 bool UBkMovieSceneMidiTrack::HasSection(const UMovieSceneSection& Section) const
 {
-	return DAWSections.Contains(&Section);
+	return MidiSections.Contains(&Section);
 }
 
 bool UBkMovieSceneMidiTrack::IsEmpty() const
 {
-	return DAWSections.Num() == 0;
+	return MidiSections.Num() == 0;
 }
 
 
 void UBkMovieSceneMidiTrack::RemoveSection(UMovieSceneSection& Section)
 {
-	DAWSections.Remove(&Section);
+	MidiSections.Remove(&Section);
 
 }
 
 void UBkMovieSceneMidiTrack::RemoveSectionAt(int32 SectionIndex)
 {
-	DAWSections.RemoveAt(SectionIndex);
+	MidiSections.RemoveAt(SectionIndex);
 	
 }
 
 const TArray<UMovieSceneSection*>& UBkMovieSceneMidiTrack::GetAllSections() const
 {
-	return DAWSections;
+	return MidiSections;
 }
 
 bool UBkMovieSceneMidiTrack::SupportsMultipleRows() const
