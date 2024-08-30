@@ -94,7 +94,9 @@ void UBkMovieSceneMidiTrack::ParseRawMidiEventsIntoNotesAndTracks(UMidiFile* InM
 							else
 							{
 								FSequencerMidiNotesTrack NewTrack;
-								NewTrack.TrackName = FName("Track " + FString::FromInt(VoiceHash)); //TODO
+								FString TrackName = *InMidiFile->GetTrack(InternalTrackIndex)->GetName();
+								NewTrack.TrackName = FName(FString::Printf(TEXT("%d : %s"), VoiceHash, *TrackName)); //TODO
+								NewTrack.TrackColor = FLinearColor::MakeRandomSeededColor(VoiceHash);
 								NewTrack.Notes.Add(NewNote);
 								NewTrack.TrackIndexInMidiFile = InternalTrackIndex;
 								NewTrack.ChannelIndexInMidiFile = MidiEvent.GetMsg().GetStdChannel();

@@ -123,6 +123,7 @@ FKeyPropertyResult FBkMovieSceneMidiTrackEditor::AddNewMidiFile(FFrameNumber Key
 		for (auto& [Index, MidiTrack] : Track->MidiTracks)
 		{
 			auto* NewSection = Track->AddNewMidiTrackOnRow(MidiTrack, KeyTime, Index, InMidiFile);
+			Track->SetTrackRowDisplayName(FText::FromName(MidiTrack.TrackName), Index);
 			KeyPropertyResult.SectionsCreated.Add(NewSection);
 			//NewSection->Midi = MidiFile;
 		}
@@ -170,10 +171,10 @@ FMidiSceneSectionPainter::FMidiSceneSectionPainter(UMovieSceneSection& InSection
 FText FMidiSceneSectionPainter::GetSectionTitle() const
 {
 	auto UDawSection = Cast<UBkMovieSceneMidiTrackSection>(&Section);
-	//auto SequencerData = UDawSection->DAWSequencerData;
-	//auto TrackName = SequencerData ? SequencerData->GetTracksDisplayOptions(UDawSection->TrackIndexInParentSession).trackName : "DAW Sequence";
+	auto TrackName = UDawSection->MidiData.TrackName;
+
 	
-	return FText::FromString(TEXT("Null"));
+	return FText::FromName(TrackName);
 }
 
 float FMidiSceneSectionPainter::GetSectionHeight() const
@@ -183,59 +184,29 @@ float FMidiSceneSectionPainter::GetSectionHeight() const
 
 int32 FMidiSceneSectionPainter::OnPaintSection(FSequencerSectionPainter& InPainter) const
 {
-	//InPainter.
 
-	FSlateDrawElement::MakeBox(InPainter.DrawElements, InPainter.LayerId, InPainter.SectionGeometry.ToPaintGeometry(), FEditorStyle::GetBrush("Sequencer.Section.Background"), ESlateDrawEffect::None, FLinearColor::White);
-
-	//for fun, draw grid lines. vertical
-	//for (int i = 0; i < 128; i++)
-
-
-	//auto TimeSlider = InSequencer.Pin()->GetTopTimeSliderWidget();
-	//auto TimeSliderParent = TimeSlider->GetParentWidget();
-	////print timeline slider name and parent name
-	//UE_LOG(LogTemp, Warning, TEXT("TimeSlider Name: %s"), *TimeSlider->GetWidgetClass().GetWidgetType().ToString());
-	//UE_LOG(LogTemp, Warning, TEXT("TimeSlider Parent Name: %s"), *TimeSliderParent->GetWidgetClass().GetWidgetType().ToString());
-
-
-
-	//InPainter->DrawText(FVector2D(0, 0), FText::FromString("DAW Sequence"), FEditorStyle::GetFontStyle("NormalFont"), 1.0f, FLinearColor::White);
-	//Draw some text just for textin
-	//FSlateDrawElement::MakeText(InPainter.DrawElements, InPainter.LayerId, InPainter.SectionGeometry.ToPaintGeometry(), FText::FromString("DAW Sequence TEST"), FEditorStyle::GetFontStyle("NormalFont"), ESlateDrawEffect::None, FLinearColor::White);
+	InPainter.PaintSectionBackground();
+	
 	const FTimeToPixel& TimeToPixelConverter = InPainter.GetTimeConverter();
 	FFrameRate TickResolution = TimeToPixelConverter.GetTickResolution();
 	auto UDawSection = Cast<UBkMovieSceneMidiTrackSection>(&Section);
-
-		
-		//FSlateDrawElement::MakeText(InPainter.DrawElements, InPainter.LayerId, InPainter.SectionGeometry.ToPaintGeometry(), FText::FromString(SequencerData->GetFName().ToString()), FEditorStyle::GetFontStyle("NormalFont"), ESlateDrawEffect::None, FLinearColor::White);
-		//auto LinkedNotesTracks = SequencerData->LinkedNoteDataMap;
-		//const auto& Track = LinkedNotesTracks[UDawSection->TrackIndexInParentSession];
-		//const float SectionStartTime = TickResolution.AsSeconds(UDawSection->GetInclusiveStartFrame());
-		////const auto& SectionOffset = UDawSection->SectionRange.GetLowerBound().GetValue();
-		//auto TrackColor = SequencerData->GetTracksDisplayOptions(UDawSection->TrackIndexInParentSession).trackColor;
-		//for (const auto& Note : Track.LinkedNotes)
-		//{
-		//	const auto& NoteOffset = (Note.StartTime * .001f) + SectionStartTime;
-		//	float StartPixel = TimeToPixelConverter.SecondsToPixel(NoteOffset);
-		//	float EndPixel = TimeToPixelConverter.SecondsToPixel(NoteOffset + (Note.Duration * .001f));
-		//	//draw line a line from start time to end time
-		//	FSlateDrawElement::MakeLines(InPainter.DrawElements, InPainter.LayerId, InPainter.SectionGeometry.ToPaintGeometry(), TArray<FVector2D>{FVector2D(StartPixel, 127 - Note.pitch), FVector2D(EndPixel, 127 - Note.pitch)}, ESlateDrawEffect::None, TrackColor, false);
-		//}
+	const float SectionStartTime = TickResolution.AsSeconds(UDawSection->GetInclusiveStartFrame());
+	
 	const auto& MidiSongsMap = UDawSection->Midi->GetSongMaps();
-	const float SectionOffset = 0.f;
+
 		for (const auto& Note : UDawSection->MidiData.Notes)
 		{
-			const float NoteStartTime = MidiSongsMap->TickToMs(Note.StartTick) + SectionOffset;
-			const float NoteEndTime = MidiSongsMap->TickToMs(Note.EndTick) + SectionOffset;
+			const float NoteStartTime = MidiSongsMap->TickToMs(Note.StartTick);
+			const float NoteEndTime = MidiSongsMap->TickToMs(Note.EndTick);
 			const float NoteOffset = (NoteStartTime * .001f);
-			float StartPixel = TimeToPixelConverter.SecondsToPixel(NoteStartTime * .001);
-			float EndPixel = TimeToPixelConverter.SecondsToPixel(NoteEndTime * .001f);
-			//draw line a line from start time to end time
+			float StartPixel = TimeToPixelConverter.SecondsToPixel(NoteStartTime * .001 + +SectionStartTime);
+			float EndPixel = TimeToPixelConverter.SecondsToPixel(NoteEndTime * .001f + +SectionStartTime);
+			//draw line a line from start time to end time at pitch height
 			FSlateDrawElement::MakeLines(InPainter.DrawElements, InPainter.LayerId, InPainter.SectionGeometry.ToPaintGeometry(), TArray<FVector2D>{FVector2D(StartPixel, 127 - Note.NoteNumber), FVector2D(EndPixel, 127 - Note.NoteNumber)}, ESlateDrawEffect::None, UDawSection->MidiData.TrackColor, false);
 		}
 	
 
-	InPainter.PaintSectionBackground();
+	
 	return InPainter.LayerId;
 }
 

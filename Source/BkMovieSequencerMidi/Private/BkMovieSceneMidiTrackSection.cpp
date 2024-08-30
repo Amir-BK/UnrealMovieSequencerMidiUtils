@@ -155,10 +155,10 @@ UBkMovieSceneMidiTrackSection::UBkMovieSceneMidiTrackSection(const FObjectInitia
 {
 	//bRequiresRangedHook = true;
 	//bRequiresTriggerHooks = true;
-	EvalOptions.CompletionMode = EMovieSceneCompletionMode::RestoreState;
+	//EvalOptions.CompletionMode = EMovieSceneCompletionMode::RestoreState;
 
 	//Remove const limitations.
-	This = this;
+	//This = this;
 
 }
 
