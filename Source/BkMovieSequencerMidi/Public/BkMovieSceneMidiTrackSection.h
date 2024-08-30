@@ -2,13 +2,14 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Channels/MovieSceneAudioTriggerChannel.h"
-#include "Channels/MovieSceneChannelEditorData.h"
-#include "Channels/MovieSceneCurveChannelCommon.h"
-#include "Channels/MovieSceneBoolChannel.h"
-#include "Channels/MovieSceneFloatChannel.h"
-#include "Channels/MovieSceneIntegerChannel.h"
-#include "Channels/MovieSceneStringChannel.h"
+//#include "Channels/MovieSceneAudioTriggerChannel.h"
+//#include "Channels/MovieSceneChannelEditorData.h"
+//#include "Channels/MovieSceneCurveChannelCommon.h"
+//#include "Channels/MovieSceneBoolChannel.h"
+//#include "Channels/MovieSceneFloatChannel.h"
+//#include "Channels/MovieSceneIntegerChannel.h"
+//#include "Channels/MovieSceneStringChannel.h"
+#include "HarmonixMidi/MidiFile.h"
 //#include "MidiBroadcasters/MidiBroadcaster.h"
 //#include "MidiBroadcasters/MidiBroadcasterPlayHead.h"
 //#include "MidiObjects/MidiAsset.h"
@@ -68,11 +69,11 @@ public:
 	UPROPERTY()
 	int TrackIndexInParentSession = INDEX_NONE;
 
-	UPROPERTY()
-	FMovieSceneFloatChannel SoundVolume;
+	//UPROPERTY()
+	//FMovieSceneFloatChannel SoundVolume;
 
-	UPROPERTY()
-	FMovieSceneFloatChannel PitchBend;
+	//UPROPERTY()
+	//FMovieSceneFloatChannel PitchBend;
 
 	UPROPERTY()
 	TObjectPtr<UMidiFile> Midi;
@@ -99,32 +100,9 @@ public:
 	virtual TOptional<TRange<FFrameNumber> > GetAutoSizeRange() const override { return TRange<FFrameNumber>::Empty(); }
 	virtual void TrimSection(FQualifiedFrameTime TrimTime, bool bTrimLeft, bool bDeleteKeys) override {}
 	//virtual UMovieSceneSection* SplitSection(FQualifiedFrameTime SplitTime, bool bDeleteKeys) override { return nullptr; }
-	virtual TOptional<FFrameTime> GetOffsetTime() const override;
+	//virtual TOptional<FFrameTime> GetOffsetTime() const override;
 	virtual void MigrateFrameTimes(FFrameRate SourceRate, FFrameRate DestinationRate) override {  };
 
-	//virtual EMovieSceneChannelProxyType CacheChannelProxy() override
-	//{
-	//	FMovieSceneChannelProxyData Channels;
-
-	//	UBkMovieSceneMidiTrackSection* MutableThis = const_cast<UBkMovieSceneMidiTrackSection*>(this);
-	//	UMovieScene* MovieScene = MutableThis->GetTypedOuter<UMovieScene>();
-
-	//	FMovieSceneChannelMetaData MetaData;
-	//	MetaData.Name = FName("SoundVolume");
-	//	MetaData.DisplayText = NSLOCTEXT("MovieScene", "SoundVolume", "Sound Volume");
-	//	Channels.Add(SoundVolume, MetaData, TMovieSceneExternalValue<float>());
-
-	//	MetaData.Name = FName("PitchBend");
-	//	MetaData.DisplayText = NSLOCTEXT("MovieScene", "PitchBend", "Pitch Bend");
-	//	Channels.Add(PitchBend, MetaData, TMovieSceneExternalValue<float>());
-
-	//	//MetaData.Name = FName("MidiNotes");
-	//	//MetaData.DisplayText = NSLOCTEXT("MovieScene", "MidiNotes", "Midi Notes");
-	//	//Channels.Add(MidiNotes, MetaData, TMovieSceneExternalValue<FLinkedMidiEvents>());
-
-	//	ChannelProxy = MakeShared<FMovieSceneChannelProxy>(MoveTemp(Channels));
-	//	return EMovieSceneChannelProxyType::Dynamic;
-	//}
 #if WITH_EDITOR
 	FText GetSectionTitle() const;
 #endif 
@@ -138,29 +116,5 @@ protected:
 	TObjectPtr<UMovieSceneTrack> ParentTrack;
 
 
-#if WITH_EDITOR
-	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
-#endif
-
-
-public:
-
-
-
-
-private:
-
-	double GetPlayerTimeAsSeconds(const UE::MovieScene::FEvaluationHookParams& Params) const;
-
-
-	double UpdateSectionTime(const UE::MovieScene::FEvaluationHookParams& Params) const;
-
-
-	double GetSectionTimeAhead(const UE::MovieScene::FEvaluationHookParams& Params) const;
-
-	double GetPlayerTimeAhead(const UE::MovieScene::FEvaluationHookParams& Params) const;
-
-
-	double GetDeltaTimeAsSeconds(const UE::MovieScene::FEvaluationHookParams& Params) const;
 
 };
