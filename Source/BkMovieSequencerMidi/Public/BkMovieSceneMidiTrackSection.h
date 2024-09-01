@@ -6,8 +6,8 @@
 //#include "Channels/MovieSceneChannelEditorData.h"
 //#include "Channels/MovieSceneCurveChannelCommon.h"
 //#include "Channels/MovieSceneBoolChannel.h"
-//#include "Channels/MovieSceneFloatChannel.h"
-//#include "Channels/MovieSceneIntegerChannel.h"
+#include "Channels/MovieSceneFloatChannel.h"
+#include "Channels/MovieSceneIntegerChannel.h"
 //#include "Channels/MovieSceneStringChannel.h"
 #include "HarmonixMidi/MidiFile.h"
 //#include "MidiBroadcasters/MidiBroadcaster.h"
@@ -53,12 +53,12 @@ protected:
 	UFUNCTION(CallInEditor, Category = "Midi")
 	void MarkSubdivisionsInRange();
 
-	//Create marked frames for each note in the selection range on the selected midi track
-	UFUNCTION(CallInEditor, Category = "Midi")
-	void MarkNotesInRange();
 
 
 #endif // WITH_EDITOR
+
+	UFUNCTION(CallInEditor, Category = "Midi")
+	void RebuildNoteKeyFrames();
 
 	virtual void ParseRawMidiEventsIntoNotesAndChannels(UMidiFile* InMidiFile);
 
@@ -92,6 +92,11 @@ public:
 	float SectionHeight = 150.0f;
 
 
+
+	UPROPERTY()
+	TArray<FMovieSceneIntegerChannel> MidiNoteChannels;
+
+
 	//UPROPERTY(VisibleAnywhere, Category = "Midi")
 	//TMap<int32, FSequencerMidiNotesTrack> MidiTracks;
 
@@ -110,9 +115,12 @@ public:
 	//virtual UMovieSceneSection* SplitSection(FQualifiedFrameTime SplitTime, bool bDeleteKeys) override { return nullptr; }
 	//virtual TOptional<FFrameTime> GetOffsetTime() const override;
 	virtual void MigrateFrameTimes(FFrameRate SourceRate, FFrameRate DestinationRate) override {  };
+	virtual EMovieSceneChannelProxyType CacheChannelProxy() override;
 
 #if WITH_EDITOR
 	FText GetSectionTitle() const;
+
+	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 #endif 
 
 	

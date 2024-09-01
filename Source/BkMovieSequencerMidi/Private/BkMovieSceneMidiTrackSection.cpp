@@ -60,7 +60,7 @@ void UBkMovieSceneMidiTrackSection::MarkSubdivisionsInRange()
 	FFrameTime RangeToMarkStartFrame;
 	FFrameTime RangeToMarkEndFrame;
 
-	if (bMarkOnlyInSelectionRange || SelectionRange.IsEmpty())
+	if (!bMarkOnlyInSelectionRange || SelectionRange.IsEmpty())
 	{
 		RangeToMarkStartFrame = SelectionRange.GetLowerBoundValue();
 		RangeToMarkEndFrame = SelectionRange.GetUpperBoundValue();
@@ -97,49 +97,40 @@ void UBkMovieSceneMidiTrackSection::MarkSubdivisionsInRange()
 
 }
 
-void UBkMovieSceneMidiTrackSection::MarkNotesInRange()
+#endif // WITH_EDITOR
+
+void UBkMovieSceneMidiTrackSection::RebuildNoteKeyFrames()
 {
-	UMovieScene* MovieScene = GetTypedOuter<UMovieScene>();
-
-	FFrameRate FrameRate = MovieScene->GetTickResolution();
-	const float SectionStartTimeSeconds = FrameRate.AsSeconds(GetInclusiveStartFrame());
-	auto SelectionRange = MovieScene->GetSelectionRange();
-
-	FFrameTime RangeToMarkStartFrame;
-	FFrameTime RangeToMarkEndFrame;
-
-	if (bMarkOnlyInSelectionRange || SelectionRange.IsEmpty())
+	if (CanModify())
 	{
-		RangeToMarkStartFrame = SelectionRange.GetLowerBoundValue();
-		RangeToMarkEndFrame = SelectionRange.GetUpperBoundValue();
+		Modify();
+		//const FScopedTransaction Transaction(INVTEXT("Rebuild Note Key Frames"));
+
+		const auto& SongsMap = Midi->GetSongMaps();
+		FFrameRate FrameRate = GetTypedOuter<UMovieScene>()->GetTickResolution();
+
+		for (int i = 0; i < MidiChannels.Num(); i++)
+		{
+			auto& Channel = MidiChannels[i];
+			auto& NoteChannel = MidiNoteChannels[i];
+			NoteChannel.Reset();
+
+			TArray<int> NotePitchesChannels;
+			TArray<FFrameNumber> NoteTimesChannels;
+
+			for (const auto& Note : Channel.Notes)
+			{
+				const auto& NoteTime = SongsMap->TickToMs(Note.StartTick) * .001f;
+				const auto NoteFrameTime = FFrameTime(NoteTime * FrameRate);
+
+				//NoteChannel.AddKey(NoteFrameTime.FrameNumber, Note.NoteNumber);
+				NoteTimesChannels.Add(NoteFrameTime.FrameNumber);
+				NotePitchesChannels.Add(Note.NoteNumber);
+			}
+
+			NoteChannel.AddKeys(NoteTimesChannels, NotePitchesChannels);
+		}
 	}
-	else
-	{
-		RangeToMarkStartFrame = GetInclusiveStartFrame();
-		RangeToMarkEndFrame = GetExclusiveEndFrame();
-
-	}
-	const auto& BarMap = Midi->GetSongMaps()->GetBarMap();
-	const auto& SongsMap = Midi->GetSongMaps();
-	
-
-	MovieScene->DeleteMarkedFrames();
-
-	//for (const auto& Note : MidiData.Notes)
-	//{
-	//	const auto& NoteTime = SongsMap->TickToMs(Note.StartTick) * .001f + SectionStartTimeSeconds;
-	//	FFrameTime NoteFrameTime = FFrameTime(FrameRate.AsFrameTime(NoteTime));
-
-	//	if (NoteFrameTime >= RangeToMarkStartFrame && NoteFrameTime <= RangeToMarkEndFrame)
-	//	{
-	//		auto MarkedFrame = FMovieSceneMarkedFrame(FFrameNumber(NoteFrameTime.FrameNumber));
-	//		MarkedFrame.Label = FString::Printf(TEXT("Note %d"), Note.NoteNumber);
-	//		MarkedFrame.Color = NoteColor;
-	//		MovieScene->AddMarkedFrame(MarkedFrame);
-	//	}
-
-	//}
-
 }
 
 void UBkMovieSceneMidiTrackSection::ParseRawMidiEventsIntoNotesAndChannels(UMidiFile* InMidiFile)
@@ -234,21 +225,69 @@ void UBkMovieSceneMidiTrackSection::ParseRawMidiEventsIntoNotesAndChannels(UMidi
 		}
 	}
 
+	//create channels
+
+	for (int i = 0; i < MidiChannels.Num(); i++)
+	{
+		MidiNoteChannels.Add(FMovieSceneIntegerChannel());
+	}
 	
+	RebuildNoteKeyFrames();
 }
 
-#endif // WITH_EDITOR
+
 
 UBkMovieSceneMidiTrackSection::UBkMovieSceneMidiTrackSection(const FObjectInitializer& ObjInit) : Super(ObjInit)
 {
 }
 
+EMovieSceneChannelProxyType UBkMovieSceneMidiTrackSection::CacheChannelProxy()
+{
+	FMovieSceneChannelProxyData Channels;
+
+	for (int i = 0; i < MidiNoteChannels.Num(); i++)
+	{
+		FMovieSceneChannelMetaData MetaData;
+		MetaData.bCanCollapseToTrack = false;
+		MetaData.Name = *MidiChannels[i].Name;
+		MetaData.DisplayText = FText::FromString(MidiChannels[i].Name);
+		MetaData.Color = MidiChannels[i].TrackColor;
+		
+		Channels.Add(MidiNoteChannels[i], MetaData, TMovieSceneExternalValue<int>());
+	}
+
+	ChannelProxy = MakeShared<FMovieSceneChannelProxy>(MoveTemp(Channels));
+	
+	return EMovieSceneChannelProxyType::Dynamic;
+}
 
 #if WITH_EDITOR
 FText UBkMovieSceneMidiTrackSection::GetSectionTitle() const
 {
 
 	return FText::FromName(Midi->GetFName());
+}
+void UBkMovieSceneMidiTrackSection::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
+{
+	Super::PostEditChangeProperty(PropertyChangedEvent);
+
+	if (PropertyChangedEvent.Property != nullptr)
+	{
+		const FName PropertyName = PropertyChangedEvent.Property->GetFName();
+		if (PropertyName == GET_MEMBER_NAME_CHECKED(UBkMovieSceneMidiTrackSection, Midi))
+		{
+			ParseRawMidiEventsIntoNotesAndChannels(Midi);
+		}
+		//if colors or track names changed, cache proxy
+		if (PropertyName == GET_MEMBER_NAME_CHECKED(FSequencerMidiNotesTrack, TrackColor) || PropertyName == GET_MEMBER_NAME_CHECKED(FSequencerMidiNotesTrack, Name))
+		{
+			CacheChannelProxy();
+		}
+
+
+	}
+
+
 }
 #endif
 
