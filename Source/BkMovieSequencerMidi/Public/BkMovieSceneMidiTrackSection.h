@@ -18,6 +18,8 @@
 #include "BkMovieSequencerMidi.h"
 //#include "M2SoundGraphData.h"
 #include <HarmonixMidi/SongMaps.h>
+#include "HarmonixMidi/Blueprint/MidiNote.h"
+#include "HarmonixMetasound/DataTypes/MidiEventInfo.h"
 
 #include "BkMovieSceneMidiTrackSection.generated.h"
 
@@ -25,13 +27,19 @@
 class UUndawSequenceMovieSceneTrack;
 //class UDAWSequencerData;
 
-
+DECLARE_DYNAMIC_DELEGATE_OneParam(FOnMidiNote, FMidiEventInfo, Note);
 
 UCLASS()
 class BKMOVIESEQUENCERMIDI_API UBkMovieSceneMidiTrackSection : public UMovieSceneSection//, public IMovieSceneEntityProvider //, public IMidiBroadcaster
 
 {
 	GENERATED_BODY()
+
+
+
+public:
+	UFUNCTION(BlueprintCallable, Category = "Midi", meta = (AutoCreateRefTerm = "InDelegate", Keywords = "Event, Quantization, DAW"))
+	void SubscribeToMidiNoteEventsOnTrackRow(FOnMidiNote InDelegate, int32 InRowIndex) {};
 
 protected:
 
@@ -49,23 +57,30 @@ protected:
 	UFUNCTION(CallInEditor, Category = "Midi")
 	void MarkNotesInRange();
 
+
 #endif // WITH_EDITOR
 
-
-	UPROPERTY()
-	UBkMovieSceneMidiTrackSection* This = nullptr;
+	virtual void ParseRawMidiEventsIntoNotesAndChannels(UMidiFile* InMidiFile);
 
 	UPROPERTY(EditAnywhere, Category = "Midi", meta = (InvalidEnumValues = "Beat, None"))
 	EMidiClockSubdivisionQuantization MusicSubdivision = EMidiClockSubdivisionQuantization::QuarterNote;
 
-
+	//If true, only marks frames within the selection range, if the selection range is empty, marks frames in the entire section
+	UPROPERTY(EditAnywhere, Category = "Midi")
+	bool bMarkOnlyInSelectionRange = true;
 
 
 public:
 
+	//TODO remove, not needed
 	UPROPERTY()
 	int TrackIndexInParentSession = INDEX_NONE;
 
+	UPROPERTY()
+	int MaxNotePitch = 127;
+
+	UPROPERTY()
+	int MinNotePitch = 0;
 
 	UPROPERTY()
 	TObjectPtr<UMidiFile> Midi;
@@ -74,8 +89,8 @@ public:
 	TArray<int32> MarkedFrames;
 
 
-	UPROPERTY()
-	FSequencerMidiNotesTrack MidiData;
+	UPROPERTY(VisibleAnywhere, Category = "Midi")
+	TMap<int32, FSequencerMidiNotesTrack> MidiTracks;
 
 #if WITH_EDITORONLY_DATA
 	UPROPERTY(EditAnywhere, Category = "Midi")

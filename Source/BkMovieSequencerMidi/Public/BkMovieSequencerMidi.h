@@ -36,6 +36,9 @@ struct FSequencerMidiNotesTrack
 
 	UPROPERTY()
 	int32 ChannelIndexInMidiFile = INDEX_NONE;
+
+	UPROPERTY()
+	FLinearColor TrackColor = FLinearColor::White;
 };
 
 

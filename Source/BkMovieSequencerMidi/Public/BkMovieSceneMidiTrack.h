@@ -4,11 +4,12 @@
 
 #include "MovieSceneNameableTrack.h"
 #include "HarmonixMidi/MidiFile.h"
+#include "HarmonixMetasound/DataTypes/MidiEventInfo.h"
 #include "BkMovieSequencerMidi.h"
 #include "BkMovieSceneMidiTrackSection.h"
 #include "BkMovieSceneMidiTrack.generated.h"
 
-
+//DECLARE_DYNAMIC_DELEGATE_OneParam(FOnMidiNote, FMidiEventInfo, Note);
 
 //represents an entire midi file where each of the internal tracks are represented as sections
 UCLASS()
@@ -19,7 +20,10 @@ class BKMOVIESEQUENCERMIDI_API UBkMovieSceneMidiTrack : public UMovieSceneNameab
 
 public:
 
-	virtual UBkMovieSceneMidiTrackSection* AddNewMidiTrackOnRow(FSequencerMidiNotesTrack& MidiDataPtr, FFrameNumber Time, int32 RowIndex, UMidiFile* InMidiFile);
+	UFUNCTION(BlueprintCallable, Category = "Midi", meta = (AutoCreateRefTerm = "InDelegate", Keywords = "Event, Quantization, DAW"))
+	void SubscribeToMidiNoteEvents(FOnMidiNote InDelegate) {};
+
+	virtual UBkMovieSceneMidiTrackSection* AddNewMidiTrackOnRow(FFrameNumber Time, int32 RowIndex, UMidiFile* InMidiFile);
 
 	virtual void ParseRawMidiEventsIntoNotesAndTracks(UMidiFile* InMidiFile);
 	virtual void CreateSectionsFromMidiTracks();
@@ -35,14 +39,14 @@ public:
 	virtual bool IsEmpty() const override;
 	virtual const TArray<UMovieSceneSection*>& GetAllSections() const override;
 	virtual bool SupportsMultipleRows() const override;
-
+/*
 #if WITH_EDITOR
-	/**
-	 * we override this function to update the start frame of all the midi sections when the track is moved
-	 */
+
 	virtual EMovieSceneSectionMovedResult OnSectionMoved(UMovieSceneSection& Section, const FMovieSceneSectionMovedParams& Params) override;
 
 #endif
+
+*/
 
 	//END UMovieSceneTrack Interface
 

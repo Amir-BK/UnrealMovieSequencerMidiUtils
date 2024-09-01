@@ -6,13 +6,13 @@
 #include "BkMovieSceneMidiTrackSection.h"
 
 
-UBkMovieSceneMidiTrackSection* UBkMovieSceneMidiTrack::AddNewMidiTrackOnRow(FSequencerMidiNotesTrack& InMidiDataPtr, FFrameNumber Time, int32 RowIndex, UMidiFile* InMidiFile)
+UBkMovieSceneMidiTrackSection* UBkMovieSceneMidiTrack::AddNewMidiTrackOnRow(FFrameNumber Time, int32 RowIndex, UMidiFile* InMidiFile)
 {
 
 	//check(DAWData);
 
 	//MidiData = InMidiDataPtr;
-	FSequencerMidiNotesTrack& NewSectionMidiData = MidiTracks[RowIndex];
+	//FSequencerMidiNotesTrack& NewSectionMidiData = MidiTracks[RowIndex];
 	MidiFile = InMidiFile;
 
 	FFrameRate FrameRate = GetTypedOuter<UMovieScene>()->GetTickResolution();
@@ -21,7 +21,7 @@ UBkMovieSceneMidiTrackSection* UBkMovieSceneMidiTrack::AddNewMidiTrackOnRow(FSeq
 
 
 	//const float Duration = DAWData->SequenceDuration * .001f;
-	const float Duration = MidiFile->GetSongMaps()->GetSongLengthMs() * .001f;
+	const float Duration = InMidiFile->GetSongMaps()->GetSongLengthMs() * .001f;
 
 	DurationToUse = Duration * FrameRate;
 
@@ -30,8 +30,10 @@ UBkMovieSceneMidiTrackSection* UBkMovieSceneMidiTrack::AddNewMidiTrackOnRow(FSeq
 	//add the section
 	UBkMovieSceneMidiTrackSection* NewEvaluationSection = Cast<UBkMovieSceneMidiTrackSection>(CreateNewSection());
 	NewEvaluationSection->ParentTrack = this;
-	NewEvaluationSection->MidiData = NewSectionMidiData;
-	NewEvaluationSection->Midi = MidiFile;
+	//NewEvaluationSection->MidiData = NewSectionMidiData;
+	NewEvaluationSection->ParseRawMidiEventsIntoNotesAndChannels(InMidiFile);	
+	//NewEvaluationSection->Midi = MidiFile;
+	
 	NewEvaluationSection->InitialPlacementOnRow(MidiSections, Time, DurationToUse.FrameNumber.Value, RowIndex);
 	//NewEvaluationSection->DAWSequencerData = DAWData;
 	NewEvaluationSection->TrackIndexInParentSession = RowIndex;
@@ -100,6 +102,7 @@ void UBkMovieSceneMidiTrack::ParseRawMidiEventsIntoNotesAndTracks(UMidiFile* InM
 								NewTrack.Notes.Add(NewNote);
 								NewTrack.TrackIndexInMidiFile = InternalTrackIndex;
 								NewTrack.ChannelIndexInMidiFile = MidiEvent.GetMsg().GetStdChannel();
+								NewTrack.TrackColor = FLinearColor::MakeRandomSeededColor(VoiceHash);
 								MidiTracks.Add(VoiceHash, NewTrack);
 							}
 
@@ -107,8 +110,6 @@ void UBkMovieSceneMidiTrack::ParseRawMidiEventsIntoNotesAndTracks(UMidiFile* InM
 
 					}
 				}
-
-
 
 			}
 	
@@ -173,30 +174,64 @@ bool UBkMovieSceneMidiTrack::SupportsMultipleRows() const
 {
 	return true;
 }
-
-#if WITH_EDITOR
-inline EMovieSceneSectionMovedResult UBkMovieSceneMidiTrack::OnSectionMoved(UMovieSceneSection& Section, const FMovieSceneSectionMovedParams& Params)
-{
-
-
-	auto MovedSectionNewOffset = Section.GetInclusiveStartFrame();
-	auto MovedSectionNewEnd = Section.GetExclusiveEndFrame();
-
-	UE_LOG(LogTemp, Warning, TEXT("MovedSectionNewOffset: %d"), MovedSectionNewOffset.Value);
-
-	for (auto& MidiSection : MidiSections)
-	{
-		if (MidiSection != &Section)
-		{
-			MidiSection->SetStartFrame(MovedSectionNewOffset);
-			MidiSection->SetEndFrame(MovedSectionNewEnd);
-		}
-
-	}
-
-	return EMovieSceneSectionMovedResult::None;
-}
-#endif
+//
+//#if WITH_EDITOR
+//inline EMovieSceneSectionMovedResult UBkMovieSceneMidiTrack::OnSectionMoved(UMovieSceneSection& Section, const FMovieSceneSectionMovedParams& Params)
+//{
+//
+//
+//	auto MovedSectionNewOffset = Section.GetInclusiveStartFrame();
+//	auto MovedSectionNewEnd = Section.GetExclusiveEndFrame();
+//
+//	FString MoveType;
+//
+//	switch (Params.MoveType)
+//	{
+//	case EPropertyChangeType::ArrayAdd:
+//		MoveType = "ArrayAdd";
+//		break;
+//	case EPropertyChangeType::ArrayRemove:
+//		MoveType = "ArrayRemove";
+//		break;
+//	case EPropertyChangeType::ArrayMove:
+//		MoveType = "ArrayMove";
+//		break;
+//	case EPropertyChangeType::Duplicate:
+//		MoveType = "Duplicate";
+//		break;
+//	case EPropertyChangeType::ValueSet:
+//		MoveType = "ValueSet";
+//		break;
+//	case EPropertyChangeType::Interactive:
+//		MoveType = "Interactive";
+//		break;
+//	case EPropertyChangeType::Redirected:
+//		MoveType = "Redirected";
+//		break;
+//	case EPropertyChangeType::ToggleEditable:
+//		MoveType = "ToggleEditable";
+//		break;
+//	default:
+//			MoveType = "Unknown";
+//			break;
+//
+//	}
+//
+//	UE_LOG(LogTemp, Log, TEXT("MovedSectionNewOffset: %d, MoveType: %s"), MovedSectionNewOffset.Value, *MoveType);
+//
+//	for (auto& MidiSection : MidiSections)
+//	{
+//		if (MidiSection != &Section)
+//		{
+//			MidiSection->SetStartFrame(MovedSectionNewOffset);
+//			MidiSection->SetEndFrame(MovedSectionNewEnd);
+//		}
+//
+//	}
+//
+//	return EMovieSceneSectionMovedResult::None;
+//}
+//#endif
 
 
 

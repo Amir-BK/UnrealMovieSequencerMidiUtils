@@ -33,6 +33,7 @@ public class BkMovieSequencerMidi : ModuleRules
 				"LevelSequence",
 				"MovieScene",
 				"MovieSceneTracks",
+				"HarmonixMetasound"
 				
 				// ... add other public dependencies that you statically link with here ...
 			}

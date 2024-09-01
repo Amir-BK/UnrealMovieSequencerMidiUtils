@@ -99,16 +99,12 @@ FKeyPropertyResult FBkMovieSceneMidiTrackEditor::AddNewMidiFile(FFrameNumber Key
 
 		Track->Modify();
 		Track->SetDisplayName(FText::FromName(InMidiFile->GetFName()));
-		Track->ParseRawMidiEventsIntoNotesAndTracks(InMidiFile);
 
-		for (auto& [Index, MidiTrack] : Track->MidiTracks)
-		{
-			auto* NewSection = Track->AddNewMidiTrackOnRow(MidiTrack, KeyTime, Index, InMidiFile);
-			Track->SetTrackRowDisplayName(FText::FromName(MidiTrack.TrackName), Index);
-			NewSection->NoteColor = FLinearColor::MakeRandomSeededColor(Index);
-			KeyPropertyResult.SectionsCreated.Add(NewSection);
+		auto* NewSection = Track->AddNewMidiTrackOnRow(KeyTime, RowIndex, InMidiFile);
 
-		}
+		KeyPropertyResult.SectionsCreated.Add(NewSection);
+
+
 		GetSequencer()->OnAddTrack(Track, FGuid());
 		
 	}
@@ -156,7 +152,12 @@ int32 FMidiSceneSectionPainter::OnPaintSection(FSequencerSectionPainter& InPaint
 	
 	const auto& MidiSongsMap = UDawSection->Midi->GetSongMaps();
 
-		for (const auto& Note : UDawSection->MidiData.Notes)
+	for (int i = 0; i < UDawSection->MidiTracks.Num(); i++)
+	{
+
+		const auto& MidiTrack = UDawSection->MidiTracks[i].Notes;
+		const auto& TrackColor = UDawSection->MidiTracks[i].TrackColor;
+		for (const auto& Note : MidiTrack)
 		{
 			const float NoteStartTime = MidiSongsMap->TickToMs(Note.StartTick);
 			const float NoteEndTime = MidiSongsMap->TickToMs(Note.EndTick);
@@ -164,8 +165,10 @@ int32 FMidiSceneSectionPainter::OnPaintSection(FSequencerSectionPainter& InPaint
 			float StartPixel = TimeToPixelConverter.SecondsToPixel(NoteStartTime * .001 + +SectionStartTime);
 			float EndPixel = TimeToPixelConverter.SecondsToPixel(NoteEndTime * .001f + +SectionStartTime);
 			//draw line a line from start time to end time at pitch height
-			FSlateDrawElement::MakeLines(InPainter.DrawElements, InPainter.LayerId, InPainter.SectionGeometry.ToPaintGeometry(), TArray<FVector2D>{FVector2D(StartPixel, 127 - Note.NoteNumber), FVector2D(EndPixel, 127 - Note.NoteNumber)}, ESlateDrawEffect::None, UDawSection->NoteColor, false);
+			FSlateDrawElement::MakeLines(InPainter.DrawElements, InPainter.LayerId, InPainter.SectionGeometry.ToPaintGeometry(), TArray<FVector2D>{FVector2D(StartPixel, 127 - Note.NoteNumber), FVector2D(EndPixel, 127 - Note.NoteNumber)}, ESlateDrawEffect::None, TrackColor, false);
 		}
+	}
+
 	
 
 	
