@@ -60,7 +60,7 @@ void UBkMovieSceneMidiTrackSection::MarkSubdivisionsInRange()
 	FFrameTime RangeToMarkStartFrame;
 	FFrameTime RangeToMarkEndFrame;
 
-	if (!bMarkOnlyInSelectionRange || SelectionRange.IsEmpty())
+	if (bMarkOnlyInSelectionRange || SelectionRange.IsEmpty())
 	{
 		RangeToMarkStartFrame = SelectionRange.GetLowerBoundValue();
 		RangeToMarkEndFrame = SelectionRange.GetUpperBoundValue();

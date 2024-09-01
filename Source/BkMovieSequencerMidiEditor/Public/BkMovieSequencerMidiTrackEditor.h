@@ -26,6 +26,8 @@ public:
 
 	virtual float GetSectionHeight() const override;
 
+	
+
 	virtual int32 OnPaintSection(FSequencerSectionPainter& InPainter) const override;
 
 	virtual UMovieSceneSection* GetSectionObject() override;

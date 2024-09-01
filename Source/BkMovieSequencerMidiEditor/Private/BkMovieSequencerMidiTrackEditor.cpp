@@ -56,6 +56,19 @@ TSharedRef<ISequencerSection> FBkMovieSceneMidiTrackEditor::MakeSectionInterface
 
 void FBkMovieSceneMidiTrackEditor::Resize(float NewSize, UMovieSceneTrack* InTrack)
 {
+	
+	auto Track = Cast<UBkMovieSceneMidiTrack>(InTrack);
+	if (Track)
+	{
+		for (auto Section : Track->GetAllSections())
+		{
+			auto MidiSection = Cast<UBkMovieSceneMidiTrackSection>(Section);
+			if (MidiSection)
+			{
+				MidiSection->SectionHeight = FMath::Max(NewSize, 50.0f);
+			}
+		}
+	}
 }
 
 TSharedRef<SWidget> FBkMovieSceneMidiTrackEditor::BuildMidiSubmenu(FOnAssetSelected OnAssetSelected, FOnAssetEnterPressed OnAssetEnterPressed)
@@ -137,8 +150,10 @@ FText FMidiSceneSectionPainter::GetSectionTitle() const
 
 float FMidiSceneSectionPainter::GetSectionHeight() const
 {
-	return 150.0f;
+	return Cast<UBkMovieSceneMidiTrackSection>(&Section)->SectionHeight;
 }
+
+
 
 int32 FMidiSceneSectionPainter::OnPaintSection(FSequencerSectionPainter& InPainter) const
 {
