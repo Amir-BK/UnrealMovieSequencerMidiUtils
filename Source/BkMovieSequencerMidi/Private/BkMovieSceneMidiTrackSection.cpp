@@ -193,19 +193,21 @@ void UBkMovieSceneMidiTrackSection::ParseRawMidiEventsIntoNotesAndChannels(UMidi
 							//so we have an event, but we need to find the voice it belongs to
 							const int32 VoiceHash = DiscoveredVoices.AddUnique(TTuple<int32, int32>(InternalTrackIndex, MidiEvent.GetMsg().GetStdChannel()));
 
-							if (MidiTracks.Contains(VoiceHash))
+							if (MidiChannels.IsValidIndex(VoiceHash))
 							{
-								MidiTracks[VoiceHash].Notes.Add(NewNote);
+								MidiChannels[VoiceHash].Notes.Add(NewNote);
 							}
 							else
 							{
 								FSequencerMidiNotesTrack NewTrack;
 								FString TrackName = *InMidiFile->GetTrack(InternalTrackIndex)->GetName();
-								NewTrack.TrackName = FName(FString::Printf(TEXT("%d : %s"), VoiceHash, *TrackName)); //TODO
+								NewTrack.Name = FString::Printf(TEXT("%d : %s"), VoiceHash, *TrackName); //TODO
+								NewTrack.TrackColor = FLinearColor::MakeRandomSeededColor(VoiceHash);
 								NewTrack.Notes.Add(NewNote);
 								NewTrack.TrackIndexInMidiFile = InternalTrackIndex;
 								NewTrack.ChannelIndexInMidiFile = MidiEvent.GetMsg().GetStdChannel();
-								MidiTracks.Add(VoiceHash, NewTrack);
+								//MidiTracks.Add(VoiceHash, NewTrack);
+								MidiChannels.Add(NewTrack);
 							}
 
 							//we keep track of the highest and lowest note pitch

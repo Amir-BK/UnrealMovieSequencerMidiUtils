@@ -88,16 +88,15 @@ public:
 	UPROPERTY()
 	TArray<int32> MarkedFrames;
 
-
-	UPROPERTY(VisibleAnywhere, Category = "Midi")
-	TMap<int32, FSequencerMidiNotesTrack> MidiTracks;
-
-#if WITH_EDITORONLY_DATA
-	UPROPERTY(EditAnywhere, Category = "Midi")
-	FLinearColor NoteColor = FLinearColor::Red;
-#endif // WITH_EDITOR_ONLY_DATA
+	UPROPERTY()
+	float SectionHeight = 150.0f;
 
 
+	//UPROPERTY(VisibleAnywhere, Category = "Midi")
+	//TMap<int32, FSequencerMidiNotesTrack> MidiTracks;
+
+	UPROPERTY(EditAnywhere, EditFixedSize, Category = "Midi", meta =(EditFixedSize, TitleProperty = "Name", NoResetToDefault))
+	TArray<FSequencerMidiNotesTrack> MidiChannels;
 
 
 

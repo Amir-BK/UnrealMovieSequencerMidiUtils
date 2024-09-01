@@ -29,7 +29,7 @@ struct FSequencerMidiNotesTrack
 	TArray<FSequencerMidiNote> Notes;
 
 	UPROPERTY(EditAnywhere, Category = "Midi")
-	FName TrackName = NAME_None;
+	FString Name = "This is empty";
 
 	UPROPERTY()
 	int32 TrackIndexInMidiFile = INDEX_NONE;
@@ -37,8 +37,11 @@ struct FSequencerMidiNotesTrack
 	UPROPERTY()
 	int32 ChannelIndexInMidiFile = INDEX_NONE;
 
-	UPROPERTY()
+	UPROPERTY(EditAnywhere, Category = "Midi", meta = (FullyExpand = false, MaxPropertyDepth = 0, HideAlphaChannel))
 	FLinearColor TrackColor = FLinearColor::White;
+
+	UPROPERTY(EditAnywhere, Category = "Midi")
+	bool bIsVisible = true;
 };
 
 

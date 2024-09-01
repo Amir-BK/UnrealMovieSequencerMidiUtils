@@ -25,9 +25,6 @@ public:
 
 	virtual UBkMovieSceneMidiTrackSection* AddNewMidiTrackOnRow(FFrameNumber Time, int32 RowIndex, UMidiFile* InMidiFile);
 
-	virtual void ParseRawMidiEventsIntoNotesAndTracks(UMidiFile* InMidiFile);
-	virtual void CreateSectionsFromMidiTracks();
-
 	//begin UMovieSceneTrack interface
 
 	virtual UMovieSceneSection* CreateNewSection() override;
