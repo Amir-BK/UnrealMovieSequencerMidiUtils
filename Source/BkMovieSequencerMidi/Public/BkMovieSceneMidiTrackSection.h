@@ -123,6 +123,8 @@ public:
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 #endif 
 
+	void OnKeysAddedOrRemoved(FMovieSceneChannel* Channel, const TArray<FKeyAddOrDeleteEventItem>& Items);
+	void OnKeysMoved(FMovieSceneChannel* Channel, const TArray<FKeyMoveEventItem>& Items);
 	
 protected:
 

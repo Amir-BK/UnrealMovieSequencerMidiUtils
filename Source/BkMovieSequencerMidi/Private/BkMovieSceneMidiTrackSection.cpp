@@ -129,6 +129,8 @@ void UBkMovieSceneMidiTrackSection::RebuildNoteKeyFrames()
 			}
 
 			NoteChannel.AddKeys(NoteTimesChannels, NotePitchesChannels);
+			
+		
 		}
 	}
 }
@@ -226,10 +228,29 @@ void UBkMovieSceneMidiTrackSection::ParseRawMidiEventsIntoNotesAndChannels(UMidi
 	}
 
 	//create channels
+	MidiNoteChannels.Empty();
 
 	for (int i = 0; i < MidiChannels.Num(); i++)
 	{
-		MidiNoteChannels.Add(FMovieSceneIntegerChannel());
+		FKeyHandleLookupTable LookupTable;
+		TArray<int> ValueTable
+		
+		MidiNoteChannels.Add(FMovieSceneIntegerChannel(nullptr, nullptr, MidiNoteChannels[i]));
+		//MidiNoteChannels[i].OnKeyAddedEvent().Add(FMovieSceneChannelDataKeyAddedEvent::FDelegate::CreateLambda(this, &UBkMovieSceneMidiTrackSection::OnKeysAddedOrRemoved));
+		//MidiNoteChannels[i].OnKeyDeletedEvent().Add(FMovieSceneChannelDataKeyDeletedEvent::FDelegate::CreateSP(this, &UBkMovieSceneMidiTrackSection::OnKeysAddedOrRemoved));
+		
+		//MidiNoteChannels[i].OnKeyDeletedEvent().AddLambda(this, &UBkMovieSceneMidiTrackSection::RebuildNoteKeyFrames);
+		//MidiNoteChannels[i].OnKeyMovedEvent().AddLambda(this, &UBkMovieSceneMidiTrackSection::RebuildNoteKeyFrames);
+		MidiNoteChannels[i].OnKeyMovedEvent().AddLambda([this](FMovieSceneChannel* Channel, const  TArray<FKeyMoveEventItem>& MovedItems)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Keys Moved"));
+				RebuildNoteKeyFrames();
+			});
+		bool bIsKeyMovedBound = MidiNoteChannels[i].OnKeyMovedEvent().IsBound();
+		UE_LOG(LogTemp, Warning, TEXT("Is Key Moved Bound: %s"), bIsKeyMovedBound ? TEXT("True") : TEXT("False"));
+		//MidiNoteChannels[i].GetData().
+
+
 	}
 	
 	RebuildNoteKeyFrames();
@@ -252,9 +273,14 @@ EMovieSceneChannelProxyType UBkMovieSceneMidiTrackSection::CacheChannelProxy()
 		MetaData.Name = *MidiChannels[i].Name;
 		MetaData.DisplayText = FText::FromString(MidiChannels[i].Name);
 		MetaData.Color = MidiChannels[i].TrackColor;
+		//MetaData.
 		
 		Channels.Add(MidiNoteChannels[i], MetaData, TMovieSceneExternalValue<int>());
+
+
+		
 	}
+
 
 	ChannelProxy = MakeShared<FMovieSceneChannelProxy>(MoveTemp(Channels));
 	
@@ -283,7 +309,7 @@ void UBkMovieSceneMidiTrackSection::PostEditChangeProperty(FPropertyChangedEvent
 		{
 			CacheChannelProxy();
 		}
-
+		UE_LOG(LogTemp, Warning, TEXT("Property Changed: %s"), *PropertyName.ToString());
 
 	}
 
@@ -291,6 +317,17 @@ void UBkMovieSceneMidiTrackSection::PostEditChangeProperty(FPropertyChangedEvent
 }
 #endif
 
+void UBkMovieSceneMidiTrackSection::OnKeysAddedOrRemoved(FMovieSceneChannel* Channel, const TArray<FKeyAddOrDeleteEventItem>& Items)
+{
+	UE_LOG(LogTemp, Warning, TEXT("Keys Changed"));
+	RebuildNoteKeyFrames();
+}
+
+void UBkMovieSceneMidiTrackSection::OnKeysMoved(FMovieSceneChannel* Channel, const TArray<FKeyMoveEventItem>& Items)
+{
+	UE_LOG(LogTemp, Warning, TEXT("Keys Moved"));
+	RebuildNoteKeyFrames();
+}
 
 
 

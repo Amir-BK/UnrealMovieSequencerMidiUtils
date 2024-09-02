@@ -65,7 +65,7 @@ void FBkMovieSceneMidiTrackEditor::Resize(float NewSize, UMovieSceneTrack* InTra
 			auto MidiSection = Cast<UBkMovieSceneMidiTrackSection>(Section);
 			if (MidiSection)
 			{
-				MidiSection->SectionHeight = FMath::Max(NewSize, 50.0f);
+				MidiSection->SectionHeight = FMath::Max(NewSize, 25.0f);
 			}
 		}
 	}
