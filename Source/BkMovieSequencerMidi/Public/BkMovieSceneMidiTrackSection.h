@@ -41,6 +41,11 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Midi", meta = (AutoCreateRefTerm = "InDelegate", Keywords = "Event, Quantization, DAW"))
 	void SubscribeToMidiNoteEventsOnTrackRow(FOnMidiNote InDelegate, int32 InRowIndex) {};
 
+
+
+	UFUNCTION(CallInEditor, Category = "Midi")
+	void RebuildNoteKeyFrames();
+
 protected:
 
 #if WITH_EDITOR //The midi section is only used in the editor to mark frames in the sequencer for animation purposes
@@ -57,8 +62,7 @@ protected:
 
 #endif // WITH_EDITOR
 
-	UFUNCTION(CallInEditor, Category = "Midi")
-	void RebuildNoteKeyFrames();
+protected:
 
 	virtual void ParseRawMidiEventsIntoNotesAndChannels(UMidiFile* InMidiFile);
 
@@ -109,17 +113,22 @@ public:
 public:
 	UBkMovieSceneMidiTrackSection(const FObjectInitializer& ObjInit);
 
+	const bool IsRebuildingKeys() const { return bIsRebuildingKeys; }
 
-	virtual TOptional<TRange<FFrameNumber> > GetAutoSizeRange() const override { return TRange<FFrameNumber>::Empty(); }
-	virtual void TrimSection(FQualifiedFrameTime TrimTime, bool bTrimLeft, bool bDeleteKeys) override {}
+	//virtual TOptional<TRange<FFrameNumber> > GetAutoSizeRange() const override { return TRange<FFrameNumber>::Empty(); }
+	//virtual void TrimSection(FQualifiedFrameTime TrimTime, bool bTrimLeft, bool bDeleteKeys) override {}
 	//virtual UMovieSceneSection* SplitSection(FQualifiedFrameTime SplitTime, bool bDeleteKeys) override { return nullptr; }
 	//virtual TOptional<FFrameTime> GetOffsetTime() const override;
-	virtual void MigrateFrameTimes(FFrameRate SourceRate, FFrameRate DestinationRate) override {  };
+	//virtual void MigrateFrameTimes(FFrameRate SourceRate, FFrameRate DestinationRate) override {  };
 	virtual EMovieSceneChannelProxyType CacheChannelProxy() override;
+	virtual void MoveSection(FFrameNumber DeltaTime) override { /* if (!bIsRebuildingKeys) Super::MoveSection(DeltaTime);*/ };
+	//virtual void TrimSection(FQualifiedFrameTime TrimTime, bool bTrimLeft, bool bDeleteKeys) override { /*if (!bIsRebuildingKeys) Super::TrimSectionByRange(TrimRange, bTrimLeft, bDeleteKeys);*/ };
+	virtual void SetRange(const TRange<FFrameNumber>& NewRange) override { if (!bIsRebuildingKeys) Super::SetRange(NewRange); };
 
 #if WITH_EDITOR
 	FText GetSectionTitle() const;
 
+	
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 #endif 
 
@@ -132,6 +141,8 @@ protected:
 
 	UPROPERTY()
 	TObjectPtr<UMovieSceneTrack> ParentTrack;
+
+	bool bIsRebuildingKeys = false;
 
 
 

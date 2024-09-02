@@ -20,8 +20,15 @@
 class FMidiSceneSectionPainter : public ISequencerSection
 {
 public:
+	
+
+	
+	
 	FMidiSceneSectionPainter(UMovieSceneSection& InSection, TWeakPtr<ISequencer> InSequencer);
 
+	
+	
+	
 	virtual FText GetSectionTitle() const override;
 
 	virtual float GetSectionHeight() const override;
@@ -31,9 +38,23 @@ public:
 	virtual int32 OnPaintSection(FSequencerSectionPainter& InPainter) const override;
 
 	virtual UMovieSceneSection* GetSectionObject() override;
+private:
+
+	void BindToKeyModifiedDelegates();
+
+public:
+	//UMovieSceneSection& Section;
+	UBkMovieSceneMidiTrackSection* MidiSection;
+
+	UMovieSceneSection& Section;
+
+
 
 	/** The section we are visualizing. */
-	UMovieSceneSection& Section;
+
+
+	/** The sequencer */
+	TWeakPtr<ISequencer> Sequencer;
 };
 
 class FBkMovieSceneMidiTrackEditor : public FMovieSceneTrackEditor

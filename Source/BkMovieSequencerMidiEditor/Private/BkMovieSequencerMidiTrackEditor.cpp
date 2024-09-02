@@ -123,7 +123,7 @@ FKeyPropertyResult FBkMovieSceneMidiTrackEditor::AddNewMidiFile(FFrameNumber Key
 	}
 
 
-		KeyPropertyResult.bTrackModified = true;
+	KeyPropertyResult.bTrackModified = true;
 		
 
 	
@@ -133,24 +133,23 @@ FKeyPropertyResult FBkMovieSceneMidiTrackEditor::AddNewMidiFile(FFrameNumber Key
 }
 ;
 
-FMidiSceneSectionPainter::FMidiSceneSectionPainter(UMovieSceneSection& InSection, TWeakPtr<ISequencer> InSequencer)
-	: Section(InSection)
-{
 
+FMidiSceneSectionPainter::FMidiSceneSectionPainter(UMovieSceneSection& InSection, TWeakPtr<ISequencer> InSequencer) : Section(InSection), Sequencer(InSequencer)
+{
+	MidiSection = Cast<UBkMovieSceneMidiTrackSection>(&InSection);
+	BindToKeyModifiedDelegates();
 }
 
 FText FMidiSceneSectionPainter::GetSectionTitle() const
 {
-	auto UDawSection = Cast<UBkMovieSceneMidiTrackSection>(&Section);
-	//Section.Get
 
 	
-	return UDawSection->GetSectionTitle();
+	return MidiSection->GetSectionTitle();
 }
 
 float FMidiSceneSectionPainter::GetSectionHeight() const
 {
-	return Cast<UBkMovieSceneMidiTrackSection>(&Section)->SectionHeight;
+	return MidiSection->SectionHeight;
 }
 
 
@@ -164,24 +163,24 @@ int32 FMidiSceneSectionPainter::OnPaintSection(FSequencerSectionPainter& InPaint
 	
 	const FTimeToPixel& TimeToPixelConverter = InPainter.GetTimeConverter();
 	FFrameRate TickResolution = TimeToPixelConverter.GetTickResolution();
-	auto UDawSection = Cast<UBkMovieSceneMidiTrackSection>(&Section);
-	const float SectionStartTime = TickResolution.AsSeconds(UDawSection->GetInclusiveStartFrame());
+	//auto UDawSection = Cast<UBkMovieSceneMidiTrackSection>(&Section);
+	const float SectionStartTime = TickResolution.AsSeconds(MidiSection->GetInclusiveStartFrame());
 	
-	const auto& MidiSongsMap = UDawSection->Midi->GetSongMaps();
-	const int NoteRange = UDawSection->MaxNotePitch - UDawSection->MinNotePitch + 3;
-	for (int i = 0; i < UDawSection->MidiChannels.Num(); i++)
+	const auto& MidiSongsMap = MidiSection->Midi->GetSongMaps();
+	const int NoteRange = MidiSection->MaxNotePitch - MidiSection->MinNotePitch + 3;
+	for (int i = 0; i < MidiSection->MidiChannels.Num(); i++)
 	{
 
-		const auto& MidiTrack = UDawSection->MidiChannels[i].Notes;
-		const auto& TrackColor = UDawSection->MidiChannels[i].TrackColor;
-		if (UDawSection->MidiChannels[i].bIsVisible == false) 
+		const auto& MidiTrack = MidiSection->MidiChannels[i].Notes;
+		const auto& TrackColor = MidiSection->MidiChannels[i].TrackColor;
+		if (MidiSection->MidiChannels[i].bIsVisible == false)
 		{
 			continue;
 		}
 		for (const auto& Note : MidiTrack)
 		{
 			//a bit ugly and magic numbers but we just want the notes to be offset from the very edges of the section by one note height
-			const float MappedPitch = GetSectionHeight() / NoteRange * (NoteRange - ((Note.NoteNumber + 1) - UDawSection->MinNotePitch));
+			const float MappedPitch = GetSectionHeight() / NoteRange * (NoteRange - ((Note.NoteNumber + 1) - MidiSection->MinNotePitch));
 			const float NoteStartTime = MidiSongsMap->TickToMs(Note.StartTick);
 			const float NoteEndTime = MidiSongsMap->TickToMs(Note.EndTick);
 			const float NoteOffset = (NoteStartTime * .001f);
@@ -202,4 +201,53 @@ UMovieSceneSection* FMidiSceneSectionPainter::GetSectionObject()
 {
 	return &Section;
 }
+
+void FMidiSceneSectionPainter::BindToKeyModifiedDelegates()
+{
+
+	Sequencer.Pin()->OnChannelChanged().AddLambda([this](const FMovieSceneChannelMetaData* MetaData, UMovieSceneSection* Section)
+		{
+			//print channel name
+			/*for (auto& MidiChannel : MidiSection->MidiNoteChannels)
+			{
+				if (MidiChannel.GetData(). == Channel)
+				{
+					UE_LOG(LogTemp, Warning, TEXT("Found a midi channel?"));
+				}
+			}*/
+			if (Section->StaticClass() == UBkMovieSceneMidiTrackSection::StaticClass()) MidiSection->RebuildNoteKeyFrames();
+
+		});
+	//MidiSection->On
+	//for (auto& MidiChannel : MidiSection->MidiNoteChannels)
+	//{
+	//	if (!MidiChannel.OnKeyMovedEvent().IsBound())
+	//	{
+	//		MidiChannel.OnKeyMovedEvent().AddLambda([this](FMovieSceneChannel* Channel, const  TArray<FKeyMoveEventItem>& MovedItems)
+	//			{
+	//				//UE_LOG(LogTemp, Warning, TEXT("OnKeyMovedEvent"));
+	//				if (!MidiSection->IsRebuildingKeys()) MidiSection->RebuildNoteKeyFrames();
+	//			});
+
+	//	}
+	//	
+	//	if (!MidiChannel.OnKeyAddedEvent().IsBound())
+	//	{
+	//		MidiChannel.OnKeyAddedEvent().AddLambda([this](FMovieSceneChannel* Channel, const  TArray<FKeyAddOrDeleteEventItem>& Items)
+	//			{
+	//				if (!MidiSection->IsRebuildingKeys()) MidiSection->RebuildNoteKeyFrames();
+	//			});
+	//	}
+	//	if (!MidiChannel.OnKeyDeletedEvent().IsBound())
+	//	{
+	//		MidiChannel.OnKeyDeletedEvent().AddLambda([this](FMovieSceneChannel* Channel, const  TArray<FKeyAddOrDeleteEventItem>& Items)
+	//			{
+	//				if (!MidiSection->IsRebuildingKeys()) MidiSection->RebuildNoteKeyFrames();
+	//			});
+	//	}
+	//
+
+
+};
+
 

@@ -31,7 +31,7 @@ void UBkMovieSceneMidiTrackSection::MarkBars()
 
 		auto MarkedFrame = FMovieSceneMarkedFrame(FFrameNumber(BarFrameTime.FrameNumber));
 		MarkedFrame.Label = FString::Printf(TEXT("Bar %d"), ++i);
-		MarkedFrame.Color = FLinearColor::Green;
+		MarkedFrame.CustomColor = FLinearColor::Green;
 		MarkedFrames.Add(MovieScene->AddMarkedFrame(MarkedFrame));
 
 		BarTick += SongsMap->SubdivisionToMidiTicks(EMidiClockSubdivisionQuantization::Bar, BarTick);
@@ -88,7 +88,7 @@ void UBkMovieSceneMidiTrackSection::MarkSubdivisionsInRange()
 
 		auto MarkedFrame = FMovieSceneMarkedFrame(FFrameNumber(SubdivisionFrameTime.FrameNumber));
 		MarkedFrame.Label = FString::Printf(TEXT("Subdivision %d"), FirstSubdivisionInSelectionRange);
-		MarkedFrame.Color = FLinearColor::Gray;
+		MarkedFrame.CustomColor = FLinearColor::Gray;
 		MovieScene->AddMarkedFrame(MarkedFrame);
 
 		FirstSubdivisionInSelectionRange += SongsMap->SubdivisionToMidiTicks(MusicSubdivision, FirstSubdivisionInSelectionRange);
@@ -104,6 +104,7 @@ void UBkMovieSceneMidiTrackSection::RebuildNoteKeyFrames()
 	if (CanModify())
 	{
 		Modify();
+		bIsRebuildingKeys = true;
 		//const FScopedTransaction Transaction(INVTEXT("Rebuild Note Key Frames"));
 
 		const auto& SongsMap = Midi->GetSongMaps();
@@ -132,7 +133,9 @@ void UBkMovieSceneMidiTrackSection::RebuildNoteKeyFrames()
 			
 		
 		}
+		bIsRebuildingKeys = false;
 	}
+
 }
 
 void UBkMovieSceneMidiTrackSection::ParseRawMidiEventsIntoNotesAndChannels(UMidiFile* InMidiFile)
@@ -233,22 +236,22 @@ void UBkMovieSceneMidiTrackSection::ParseRawMidiEventsIntoNotesAndChannels(UMidi
 	for (int i = 0; i < MidiChannels.Num(); i++)
 	{
 		FKeyHandleLookupTable LookupTable;
-		TArray<int> ValueTable
+		TArray<int> ValueTable;
 		
-		MidiNoteChannels.Add(FMovieSceneIntegerChannel(nullptr, nullptr, MidiNoteChannels[i]));
-		//MidiNoteChannels[i].OnKeyAddedEvent().Add(FMovieSceneChannelDataKeyAddedEvent::FDelegate::CreateLambda(this, &UBkMovieSceneMidiTrackSection::OnKeysAddedOrRemoved));
-		//MidiNoteChannels[i].OnKeyDeletedEvent().Add(FMovieSceneChannelDataKeyDeletedEvent::FDelegate::CreateSP(this, &UBkMovieSceneMidiTrackSection::OnKeysAddedOrRemoved));
-		
-		//MidiNoteChannels[i].OnKeyDeletedEvent().AddLambda(this, &UBkMovieSceneMidiTrackSection::RebuildNoteKeyFrames);
-		//MidiNoteChannels[i].OnKeyMovedEvent().AddLambda(this, &UBkMovieSceneMidiTrackSection::RebuildNoteKeyFrames);
-		MidiNoteChannels[i].OnKeyMovedEvent().AddLambda([this](FMovieSceneChannel* Channel, const  TArray<FKeyMoveEventItem>& MovedItems)
-			{
-				UE_LOG(LogTemp, Warning, TEXT("Keys Moved"));
-				RebuildNoteKeyFrames();
-			});
-		bool bIsKeyMovedBound = MidiNoteChannels[i].OnKeyMovedEvent().IsBound();
-		UE_LOG(LogTemp, Warning, TEXT("Is Key Moved Bound: %s"), bIsKeyMovedBound ? TEXT("True") : TEXT("False"));
-		//MidiNoteChannels[i].GetData().
+		MidiNoteChannels.Add(FMovieSceneIntegerChannel());
+		////MidiNoteChannels[i].OnKeyAddedEvent().Add(FMovieSceneChannelDataKeyAddedEvent::FDelegate::CreateLambda(this, &UBkMovieSceneMidiTrackSection::OnKeysAddedOrRemoved));
+		////MidiNoteChannels[i].OnKeyDeletedEvent().Add(FMovieSceneChannelDataKeyDeletedEvent::FDelegate::CreateSP(this, &UBkMovieSceneMidiTrackSection::OnKeysAddedOrRemoved));
+		//
+		////MidiNoteChannels[i].OnKeyDeletedEvent().AddLambda(this, &UBkMovieSceneMidiTrackSection::RebuildNoteKeyFrames);
+		////MidiNoteChannels[i].OnKeyMovedEvent().AddLambda(this, &UBkMovieSceneMidiTrackSection::RebuildNoteKeyFrames);
+		//MidiNoteChannels[i].OnKeyMovedEvent().AddLambda([this](FMovieSceneChannel* Channel, const  TArray<FKeyMoveEventItem>& MovedItems)
+		//	{
+		//		UE_LOG(LogTemp, Warning, TEXT("Keys Moved"));
+		//		if(!bIsRebuildingKeys)	RebuildNoteKeyFrames();
+		//	});
+		//bool bIsKeyMovedBound = MidiNoteChannels[i].OnKeyMovedEvent().IsBound();
+		//UE_LOG(LogTemp, Warning, TEXT("Is Key Moved Bound: %s"), bIsKeyMovedBound ? TEXT("True") : TEXT("False"));
+		////MidiNoteChannels[i].GetData().
 
 
 	}
