@@ -164,6 +164,23 @@ void FMidiSceneSectionPainter::ResizeSection(ESequencerSectionResizeMode ResizeM
 	ISequencerSection::ResizeSection(ResizeMode, ResizeTime);
 }
 
+void FMidiSceneSectionPainter::BeginSlipSection()
+{
+	BeginResizeSection();
+}
+
+void FMidiSceneSectionPainter::SlipSection(FFrameNumber SlipTime)
+{
+	UBkMovieSceneMidiTrackSection* MidiSection = Cast<UBkMovieSceneMidiTrackSection>(&Section);
+	FFrameNumber NewStartOffset = SlipTime - InitialStartTimeDuringResize;
+	NewStartOffset += InitialStartOffsetDuringResize;
+
+	MidiSection->SetStartOffset(FMath::Max(NewStartOffset, FFrameNumber(0)));
+
+	ISequencerSection::SlipSection(SlipTime);
+
+}
+
 int32 FMidiSceneSectionPainter::OnPaintSection(FSequencerSectionPainter& InPainter) const
 {
 	InPainter.PaintSectionBackground();
