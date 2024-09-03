@@ -1,4 +1,3 @@
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -6,8 +5,8 @@
 //#include "Channels/MovieSceneChannelEditorData.h"
 //#include "Channels/MovieSceneCurveChannelCommon.h"
 //#include "Channels/MovieSceneBoolChannel.h"
-//#include "Channels/MovieSceneFloatChannel.h"
-//#include "Channels/MovieSceneIntegerChannel.h"
+#include "Channels/MovieSceneFloatChannel.h"
+#include "Channels/MovieSceneIntegerChannel.h"
 //#include "Channels/MovieSceneStringChannel.h"
 #include "HarmonixMidi/MidiFile.h"
 //#include "MidiBroadcasters/MidiBroadcaster.h"
@@ -18,20 +17,37 @@
 #include "BkMovieSequencerMidi.h"
 //#include "M2SoundGraphData.h"
 #include <HarmonixMidi/SongMaps.h>
+#include "HarmonixMidi/Blueprint/MidiNote.h"
+#include "HarmonixMetasound/DataTypes/MidiEventInfo.h"
 
 #include "BkMovieSceneMidiTrackSection.generated.h"
-
 
 class UUndawSequenceMovieSceneTrack;
 //class UDAWSequencerData;
 
-
+DECLARE_DYNAMIC_DELEGATE_OneParam(FOnMidiNote, FMidiEventInfo, Note);
 
 UCLASS()
-class BKMOVIESEQUENCERMIDI_API UBkMovieSceneMidiTrackSection : public UMovieSceneSection//, public IMovieSceneEntityProvider //, public IMidiBroadcaster
+class BKMOVIESEQUENCERMIDI_API UBkMovieSceneMidiTrackSection : public UMovieSceneSection
 
 {
 	GENERATED_BODY()
+
+public:
+	//UFUNCTION(BlueprintCallable, Category = "Midi", meta = (AutoCreateRefTerm = "InDelegate", Keywords = "Event, Quantization, DAW"))
+	//void SubscribeToMidiNoteEventsOnTrackRow(FOnMidiNote InDelegate, int32 InRowIndex) { //@TODO };
+
+	/** Set the offset into the beginning of the audio clip */
+	UFUNCTION(BlueprintCallable, Category = "Sequencer|Section")
+	void SetStartOffset(FFrameNumber InStartOffset) { StartFrameOffset = InStartOffset; }
+
+	/** Get the offset into the beginning of the audio clip */
+	UFUNCTION(BlueprintPure, Category = "Sequencer|Section")
+	FFrameNumber GetStartOffset() const { return StartFrameOffset; }
+
+
+	UFUNCTION(CallInEditor, Category = "Midi")
+	void RebuildNoteKeyFrames();
 
 protected:
 
@@ -41,31 +57,42 @@ protected:
 	UFUNCTION(CallInEditor, Category = "Midi")
 	void MarkBars();
 
-	//Create marked frames on each selected subdivision within the selection range 
+	//Create marked frames on each subdivision of the selected type
 	UFUNCTION(CallInEditor, Category = "Midi")
-	void MarkSubdivisionsInRange();
-
-	//Create marked frames for each note in the selection range on the selected midi track
-	UFUNCTION(CallInEditor, Category = "Midi")
-	void MarkNotesInRange();
+	void MarkSubdivisions();
 
 #endif // WITH_EDITOR
 
+	friend class UBkMovieSceneMidiTrack;
 
-	UPROPERTY()
-	UBkMovieSceneMidiTrackSection* This = nullptr;
-
-	UPROPERTY(EditAnywhere, Category = "Midi", meta = (InvalidEnumValues = "Beat, None"))
-	EMidiClockSubdivisionQuantization MusicSubdivision = EMidiClockSubdivisionQuantization::QuarterNote;
-
-
-
+	virtual void ParseRawMidiEventsIntoNotesAndChannels(UMidiFile* InMidiFile);
 
 public:
+	UBkMovieSceneMidiTrackSection(const FObjectInitializer& ObjInit);
+
+	// UMovieSceneSection interface
+
+	virtual TOptional<TRange<FFrameNumber> > GetAutoSizeRange() const override { return TRange<FFrameNumber>::Empty(); }
+	virtual void TrimSection(FQualifiedFrameTime TrimTime, bool bTrimLeft, bool bDeleteKeys) override;
+	virtual UMovieSceneSection* SplitSection(FQualifiedFrameTime SplitTime, bool bDeleteKeys) override;
+	virtual TOptional<FFrameTime> GetOffsetTime() const override;
+	virtual void MigrateFrameTimes(FFrameRate SourceRate, FFrameRate DestinationRate) override;
+	virtual EMovieSceneChannelProxyType CacheChannelProxy() override;
+
+	// end UMovieSceneSection interface
+
+#if WITH_EDITOR
+	FText GetSectionTitle() const;
+
+	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
+#endif
+
 
 	UPROPERTY()
-	int TrackIndexInParentSession = INDEX_NONE;
+	int MaxNotePitch = 127;
 
+	UPROPERTY()
+	int MinNotePitch = 0;
 
 	UPROPERTY()
 	TObjectPtr<UMidiFile> Midi;
@@ -73,42 +100,29 @@ public:
 	UPROPERTY()
 	TArray<int32> MarkedFrames;
 
+	UPROPERTY()
+	float SectionHeight = 150.0f;
+
 
 	UPROPERTY()
-	FSequencerMidiNotesTrack MidiData;
+	TArray<FMovieSceneIntegerChannel> MidiNoteChannels;
 
-#if WITH_EDITORONLY_DATA
-	UPROPERTY(EditAnywhere, Category = "Midi")
-	FLinearColor NoteColor = FLinearColor::Red;
-#endif // WITH_EDITOR_ONLY_DATA
-
-
-
-
-
-	
-public:
-	UBkMovieSceneMidiTrackSection(const FObjectInitializer& ObjInit);
-
-
-	virtual TOptional<TRange<FFrameNumber> > GetAutoSizeRange() const override { return TRange<FFrameNumber>::Empty(); }
-	virtual void TrimSection(FQualifiedFrameTime TrimTime, bool bTrimLeft, bool bDeleteKeys) override {}
-	//virtual UMovieSceneSection* SplitSection(FQualifiedFrameTime SplitTime, bool bDeleteKeys) override { return nullptr; }
-	//virtual TOptional<FFrameTime> GetOffsetTime() const override;
-	virtual void MigrateFrameTimes(FFrameRate SourceRate, FFrameRate DestinationRate) override {  };
-
-#if WITH_EDITOR
-	FText GetSectionTitle() const;
-#endif 
-
-	
 protected:
 
-	friend class UBkMovieSceneMidiTrack;
+	UPROPERTY(EditAnywhere, Category = "Midi", meta = (InvalidEnumValues = "Beat, None"))
+	EMidiClockSubdivisionQuantization MusicSubdivision = EMidiClockSubdivisionQuantization::QuarterNote;
+
+public:
+
+	UPROPERTY(EditAnywhere, EditFixedSize, Category = "Midi", meta = (EditFixedSize, TitleProperty = "Name", NoResetToDefault))
+	TArray<FSequencerMidiNotesTrack> MidiChannels;
+protected:
+
 
 	UPROPERTY()
 	TObjectPtr<UMovieSceneTrack> ParentTrack;
 
-
-
+	/** The offset into the beginning of the midi clip */
+	UPROPERTY(EditAnywhere, Category = "Midi")
+	FFrameNumber StartFrameOffset;
 };

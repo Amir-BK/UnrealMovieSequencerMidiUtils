@@ -25,6 +25,11 @@ public:
 	virtual FText GetSectionTitle() const override;
 
 	virtual float GetSectionHeight() const override;
+	virtual void BeginResizeSection() override;
+	virtual void ResizeSection(ESequencerSectionResizeMode ResizeMode, FFrameNumber ResizeTime) override;
+	virtual void BeginSlipSection() override;
+	virtual void SlipSection(FFrameNumber SlipTime) override;
+	
 
 	virtual int32 OnPaintSection(FSequencerSectionPainter& InPainter) const override;
 
@@ -32,6 +37,12 @@ public:
 
 	/** The section we are visualizing. */
 	UMovieSceneSection& Section;
+
+	/** Cached start offset value valid only during resize */
+	FFrameNumber InitialStartOffsetDuringResize;
+
+	/** Cached start time valid only during resize */
+	FFrameNumber InitialStartTimeDuringResize;
 };
 
 class FBkMovieSceneMidiTrackEditor : public FMovieSceneTrackEditor
