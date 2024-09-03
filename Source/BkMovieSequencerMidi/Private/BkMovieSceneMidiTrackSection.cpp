@@ -21,6 +21,8 @@ void UBkMovieSceneMidiTrackSection::MarkBars()
 	FFrameRate FrameRate = MovieScene->GetTickResolution();
 
 	const float SectionStartTimeSeconds = FrameRate.AsSeconds(GetInclusiveStartFrame());
+	//const float SectionStartTime = FrameRate.AsSeconds(GetInclusiveStartFrame());
+	const auto& SectionStartOffsetSeconds = FrameRate.AsSeconds(GetStartOffset());
 
 	const auto& BarMap = Midi->GetSongMaps()->GetBarMap();
 	const auto& SongsMap = Midi->GetSongMaps();
@@ -33,7 +35,7 @@ void UBkMovieSceneMidiTrackSection::MarkBars()
 	int i = 0;
 	while (BarTick <= LastTickOfLastBar)
 	{
-		const auto& BarTime = SongsMap->TickToMs(BarTick) * .001f + SectionStartTimeSeconds;
+		const auto& BarTime = SongsMap->TickToMs(BarTick) * .001f + SectionStartTimeSeconds - SectionStartOffsetSeconds;
 		FFrameTime BarFrameTime = FFrameTime(FrameRate.AsFrameTime(BarTime));
 
 		auto MarkedFrame = FMovieSceneMarkedFrame(FFrameNumber(BarFrameTime.FrameNumber));
@@ -105,10 +107,11 @@ void UBkMovieSceneMidiTrackSection::RebuildNoteKeyFrames()
 	{
 		Modify();
 #endif
-		//const FScopedTransaction Transaction(INVTEXT("Rebuild Note Key Frames"));
-
+		
 		const auto& SongsMap = Midi->GetSongMaps();
 		FFrameRate FrameRate = GetTypedOuter<UMovieScene>()->GetTickResolution();
+		const float SectionStartTime = FrameRate.AsSeconds(GetInclusiveStartFrame());
+		const auto& SectionStartOffsetSeconds = FrameRate.AsSeconds(GetStartOffset());
 
 		for (int i = 0; i < MidiChannels.Num(); i++)
 		{
@@ -121,7 +124,7 @@ void UBkMovieSceneMidiTrackSection::RebuildNoteKeyFrames()
 
 			for (const auto& Note : Channel.Notes)
 			{
-				const auto& NoteTime = SongsMap->TickToMs(Note.StartTick) * .001f;
+				const auto& NoteTime = SongsMap->TickToMs(Note.StartTick) * .001f + SectionStartTime - SectionStartOffsetSeconds;
 				const auto NoteFrameTime = FFrameTime(NoteTime * FrameRate);
 
 				//NoteChannel.AddKey(NoteFrameTime.FrameNumber, Note.NoteNumber);
