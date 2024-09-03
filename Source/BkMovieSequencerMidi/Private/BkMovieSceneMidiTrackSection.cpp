@@ -225,6 +225,20 @@ UBkMovieSceneMidiTrackSection::UBkMovieSceneMidiTrackSection(const FObjectInitia
 {
 }
 
+TOptional<FFrameTime> UBkMovieSceneMidiTrackSection::GetOffsetTime() const
+{
+	return TOptional<FFrameTime>(StartFrameOffset);
+}
+
+void UBkMovieSceneMidiTrackSection::MigrateFrameTimes(FFrameRate SourceRate, FFrameRate DestinationRate)
+{
+	if (StartFrameOffset.Value > 0)
+	{
+		FFrameNumber NewStartFrameOffset = ConvertFrameTime(FFrameTime(StartFrameOffset), SourceRate, DestinationRate).FloorToFrame();
+		StartFrameOffset = NewStartFrameOffset;
+	}
+}
+
 EMovieSceneChannelProxyType UBkMovieSceneMidiTrackSection::CacheChannelProxy()
 {
 	FMovieSceneChannelProxyData Channels;

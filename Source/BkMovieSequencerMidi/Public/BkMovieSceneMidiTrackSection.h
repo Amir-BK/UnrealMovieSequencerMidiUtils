@@ -107,8 +107,8 @@ public:
 	virtual TOptional<TRange<FFrameNumber> > GetAutoSizeRange() const override { return TRange<FFrameNumber>::Empty(); }
 	virtual void TrimSection(FQualifiedFrameTime TrimTime, bool bTrimLeft, bool bDeleteKeys) override {}
 	//virtual UMovieSceneSection* SplitSection(FQualifiedFrameTime SplitTime, bool bDeleteKeys) override { return nullptr; }
-	//virtual TOptional<FFrameTime> GetOffsetTime() const override;
-	virtual void MigrateFrameTimes(FFrameRate SourceRate, FFrameRate DestinationRate) override {  };
+	virtual TOptional<FFrameTime> GetOffsetTime() const override;
+	virtual void MigrateFrameTimes(FFrameRate SourceRate, FFrameRate DestinationRate) override;
 	virtual EMovieSceneChannelProxyType CacheChannelProxy() override;
 
 #if WITH_EDITOR
