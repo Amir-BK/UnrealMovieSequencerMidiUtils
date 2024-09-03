@@ -57,9 +57,9 @@ protected:
 	UFUNCTION(CallInEditor, Category = "Midi")
 	void MarkBars();
 
-	//Create marked frames on each selected subdivision within the selection range
+	//Create marked frames on each subdivision of the selected type
 	UFUNCTION(CallInEditor, Category = "Midi")
-	void MarkSubdivisionsInRange();
+	void MarkSubdivisions();
 
 #endif // WITH_EDITOR
 
@@ -107,18 +107,17 @@ public:
 	UPROPERTY()
 	TArray<FMovieSceneIntegerChannel> MidiNoteChannels;
 
-
-	UPROPERTY(EditAnywhere, EditFixedSize, Category = "Midi", meta = (EditFixedSize, TitleProperty = "Name", NoResetToDefault))
-	TArray<FSequencerMidiNotesTrack> MidiChannels;
-
 protected:
 
 	UPROPERTY(EditAnywhere, Category = "Midi", meta = (InvalidEnumValues = "Beat, None"))
 	EMidiClockSubdivisionQuantization MusicSubdivision = EMidiClockSubdivisionQuantization::QuarterNote;
 
-	//If true, only marks frames within the selection range, if the selection range is empty, marks frames in the entire section
-	UPROPERTY(EditAnywhere, Category = "Midi")
-	bool bMarkOnlyInSelectionRange = true;
+public:
+
+	UPROPERTY(EditAnywhere, EditFixedSize, Category = "Midi", meta = (EditFixedSize, TitleProperty = "Name", NoResetToDefault))
+	TArray<FSequencerMidiNotesTrack> MidiChannels;
+protected:
+
 
 	UPROPERTY()
 	TObjectPtr<UMovieSceneTrack> ParentTrack;

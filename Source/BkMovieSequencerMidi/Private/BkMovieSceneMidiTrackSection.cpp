@@ -20,7 +20,6 @@ void UBkMovieSceneMidiTrackSection::MarkBars()
 	FFrameRate FrameRate = MovieScene->GetTickResolution();
 
 	const float SectionStartTimeSeconds = FrameRate.AsSeconds(GetInclusiveStartFrame());
-	//const float SectionStartTime = FrameRate.AsSeconds(GetInclusiveStartFrame());
 	const auto& SectionStartOffsetSeconds = FrameRate.AsSeconds(GetStartOffset());
 
 	const auto& BarMap = Midi->GetSongMaps()->GetBarMap();
@@ -34,66 +33,56 @@ void UBkMovieSceneMidiTrackSection::MarkBars()
 	int i = 0;
 	while (BarTick <= LastTickOfLastBar)
 	{
-		const auto& BarTime = SongsMap->TickToMs(BarTick) * .001f + SectionStartTimeSeconds - SectionStartOffsetSeconds;
-		FFrameTime BarFrameTime = FFrameTime(FrameRate.AsFrameTime(BarTime));
+		const auto& BarTime = SongsMap->TickToMs(BarTick) * .001f - SectionStartOffsetSeconds;
 
-		auto MarkedFrame = FMovieSceneMarkedFrame(FFrameNumber(BarFrameTime.FrameNumber));
-		MarkedFrame.Label = FString::Printf(TEXT("Bar %d"), ++i);
-		MarkedFrame.Color = FLinearColor::Green;
-		MarkedFrames.Add(MovieScene->AddMarkedFrame(MarkedFrame));
+		if (BarTime >= 0)
+		{
+			FFrameTime BarFrameTime = FFrameTime(FrameRate.AsFrameTime(BarTime + SectionStartTimeSeconds));
+			auto MarkedFrame = FMovieSceneMarkedFrame(FFrameNumber(BarFrameTime.FrameNumber));
+			MarkedFrame.Label = FString::Printf(TEXT("Bar %d"), ++i);
+			MarkedFrame.Color = FLinearColor::Green;
+			MarkedFrames.Add(MovieScene->AddMarkedFrame(MarkedFrame));
+		}
+		else {
+			i++;
+		}
 
 		BarTick += SongsMap->SubdivisionToMidiTicks(EMidiClockSubdivisionQuantization::Bar, BarTick);
 	}
 }
 
-void UBkMovieSceneMidiTrackSection::MarkSubdivisionsInRange()
+void UBkMovieSceneMidiTrackSection::MarkSubdivisions()
 {
 	UMovieScene* MovieScene = GetTypedOuter<UMovieScene>();
 
 	FFrameRate FrameRate = MovieScene->GetTickResolution();
 
 	const float SectionStartTimeSeconds = FrameRate.AsSeconds(GetInclusiveStartFrame());
+	const auto& SectionStartOffsetSeconds = FrameRate.AsSeconds(GetStartOffset());
 
 	const auto& BarMap = Midi->GetSongMaps()->GetBarMap();
 	const auto& SongsMap = Midi->GetSongMaps();
 	const float FirstTickOfFirstBar = BarMap.MusicTimestampBarToTick(0);
 	const float LastTickOfLastBar = Midi->GetLastEventTick();
 
-	auto SelectionRange = MovieScene->GetSelectionRange();
-
-	FFrameTime RangeToMarkStartFrame;
-	FFrameTime RangeToMarkEndFrame;
-
-	if (bMarkOnlyInSelectionRange || SelectionRange.IsEmpty())
-	{
-		RangeToMarkStartFrame = SelectionRange.GetLowerBoundValue();
-		RangeToMarkEndFrame = SelectionRange.GetUpperBoundValue();
-	}
-	else
-	{
-		RangeToMarkStartFrame = GetInclusiveStartFrame();
-		RangeToMarkEndFrame = GetExclusiveEndFrame();
-	}
-
 	MovieScene->DeleteMarkedFrames();
 
-	float FirstTickInSelectionRange = SongsMap->MsToTick(FrameRate.AsSeconds(RangeToMarkStartFrame) * 1000);
-	float LastTickInSelectionRange = SongsMap->MsToTick(FrameRate.AsSeconds(RangeToMarkEndFrame) * 1000);
+	float SubdivTick = 0;
 
-	float FirstSubdivisionInSelectionRange = SongsMap->QuantizeTickToNearestSubdivision(FMath::FloorToInt32(FirstTickInSelectionRange), EMidiFileQuantizeDirection::Up, MusicSubdivision);
-	float LastSubdivisionInSelectionRange = SongsMap->QuantizeTickToNearestSubdivision(FMath::FloorToInt32(LastTickInSelectionRange), EMidiFileQuantizeDirection::Down, MusicSubdivision);
-
-	while (FirstSubdivisionInSelectionRange <= LastSubdivisionInSelectionRange)
+	while (SubdivTick <= LastTickOfLastBar)
 	{
-		const auto& SubdivisionTime = SongsMap->TickToMs(FirstSubdivisionInSelectionRange) * .001f + SectionStartTimeSeconds;
-		FFrameTime SubdivisionFrameTime = FFrameTime(FrameRate.AsFrameTime(SubdivisionTime));
+		const auto& SubdivTime = SongsMap->TickToMs(SubdivTick) * .001f  - SectionStartOffsetSeconds;
 
-		auto MarkedFrame = FMovieSceneMarkedFrame(FFrameNumber(SubdivisionFrameTime.FrameNumber));
-		MarkedFrame.Label = FString::Printf(TEXT("Subdivision %d"), FirstSubdivisionInSelectionRange);
-		MarkedFrame.Color = FLinearColor::Gray;
-		MovieScene->AddMarkedFrame(MarkedFrame);
+		if (SubdivTime >= 0)
+		{
+			FFrameTime BarFrameTime = FFrameTime(FrameRate.AsFrameTime(SubdivTime + SectionStartTimeSeconds));
+			auto MarkedFrame = FMovieSceneMarkedFrame(FFrameNumber(BarFrameTime.FrameNumber));
+			MarkedFrame.Color = FLinearColor::Gray;
+			MarkedFrames.Add(MovieScene->AddMarkedFrame(MarkedFrame));
+		}
 
-		FirstSubdivisionInSelectionRange += SongsMap->SubdivisionToMidiTicks(MusicSubdivision, FirstSubdivisionInSelectionRange);
+
+		SubdivTick += SongsMap->SubdivisionToMidiTicks(MusicSubdivision, SubdivTick);
 	}
 }
 
