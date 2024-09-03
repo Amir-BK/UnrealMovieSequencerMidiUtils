@@ -192,6 +192,7 @@ int32 FMidiSceneSectionPainter::OnPaintSection(FSequencerSectionPainter& InPaint
 
 	const auto& MidiSongsMap = UDawSection->Midi->GetSongMaps();
 	const int NoteRange = UDawSection->MaxNotePitch - UDawSection->MinNotePitch + 3;
+	const auto& SectionStartOffsetSeconds = TickResolution.AsSeconds(UDawSection->GetStartOffset());
 	for (int i = 0; i < UDawSection->MidiChannels.Num(); i++)
 	{
 		const auto& MidiTrack = UDawSection->MidiChannels[i].Notes;
@@ -206,11 +207,13 @@ int32 FMidiSceneSectionPainter::OnPaintSection(FSequencerSectionPainter& InPaint
 			const float MappedPitch = GetSectionHeight() / NoteRange * (NoteRange - ((Note.NoteNumber + 1) - UDawSection->MinNotePitch));
 			const float NoteStartTime = MidiSongsMap->TickToMs(Note.StartTick);
 			const float NoteEndTime = MidiSongsMap->TickToMs(Note.EndTick);
-			const float NoteOffset = (NoteStartTime * .001f);
-			float StartPixel = TimeToPixelConverter.SecondsToPixel(NoteStartTime * .001 + +SectionStartTime);
-			float EndPixel = TimeToPixelConverter.SecondsToPixel(NoteEndTime * .001f + +SectionStartTime);
+			//const float NoteOffset = (NoteStartTime * .001f) ;
+			float StartPixel = TimeToPixelConverter.SecondsToPixel(NoteStartTime * .001 + SectionStartTime - SectionStartOffsetSeconds);
+			float EndPixel = TimeToPixelConverter.SecondsToPixel(NoteEndTime * .001f + SectionStartTime - SectionStartOffsetSeconds);
+			if (EndPixel < 0) continue;
+
 			//draw line a line from start time to end time at pitch height
-			FSlateDrawElement::MakeLines(InPainter.DrawElements, InPainter.LayerId, InPainter.SectionGeometry.ToPaintGeometry(), TArray<FVector2D>{FVector2D(StartPixel, MappedPitch), FVector2D(EndPixel, MappedPitch)}, ESlateDrawEffect::None, TrackColor, false);
+			FSlateDrawElement::MakeLines(InPainter.DrawElements, InPainter.LayerId, InPainter.SectionGeometry.ToPaintGeometry(), TArray<FVector2D>{FVector2D(FMath::Max(StartPixel, 0.0f), MappedPitch), FVector2D(EndPixel, MappedPitch)}, ESlateDrawEffect::None, TrackColor, false);
 		}
 	}
 
