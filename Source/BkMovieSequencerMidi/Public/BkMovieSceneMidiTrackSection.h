@@ -28,14 +28,14 @@ class UUndawSequenceMovieSceneTrack;
 DECLARE_DYNAMIC_DELEGATE_OneParam(FOnMidiNote, FMidiEventInfo, Note);
 
 UCLASS()
-class BKMOVIESEQUENCERMIDI_API UBkMovieSceneMidiTrackSection : public UMovieSceneSection//, public IMovieSceneEntityProvider //, public IMidiBroadcaster
+class BKMOVIESEQUENCERMIDI_API UBkMovieSceneMidiTrackSection : public UMovieSceneSection
 
 {
 	GENERATED_BODY()
 
 public:
-	UFUNCTION(BlueprintCallable, Category = "Midi", meta = (AutoCreateRefTerm = "InDelegate", Keywords = "Event, Quantization, DAW"))
-	void SubscribeToMidiNoteEventsOnTrackRow(FOnMidiNote InDelegate, int32 InRowIndex) {};
+	//UFUNCTION(BlueprintCallable, Category = "Midi", meta = (AutoCreateRefTerm = "InDelegate", Keywords = "Event, Quantization, DAW"))
+	//void SubscribeToMidiNoteEventsOnTrackRow(FOnMidiNote InDelegate, int32 InRowIndex) { //@TODO };
 
 	/** Set the offset into the beginning of the audio clip */
 	UFUNCTION(BlueprintCallable, Category = "Sequencer|Section")
@@ -63,21 +63,30 @@ protected:
 
 #endif // WITH_EDITOR
 
+	friend class UBkMovieSceneMidiTrack;
 
 	virtual void ParseRawMidiEventsIntoNotesAndChannels(UMidiFile* InMidiFile);
 
-	UPROPERTY(EditAnywhere, Category = "Midi", meta = (InvalidEnumValues = "Beat, None"))
-	EMidiClockSubdivisionQuantization MusicSubdivision = EMidiClockSubdivisionQuantization::QuarterNote;
-
-	//If true, only marks frames within the selection range, if the selection range is empty, marks frames in the entire section
-	UPROPERTY(EditAnywhere, Category = "Midi")
-	bool bMarkOnlyInSelectionRange = true;
-
 public:
+	UBkMovieSceneMidiTrackSection(const FObjectInitializer& ObjInit);
 
-	//TODO remove, not needed
-	UPROPERTY()
-	int TrackIndexInParentSession = INDEX_NONE;
+	// UMovieSceneSection interface
+
+	virtual TOptional<TRange<FFrameNumber> > GetAutoSizeRange() const override { return TRange<FFrameNumber>::Empty(); }
+	virtual void TrimSection(FQualifiedFrameTime TrimTime, bool bTrimLeft, bool bDeleteKeys) override;
+	virtual UMovieSceneSection* SplitSection(FQualifiedFrameTime SplitTime, bool bDeleteKeys) override;
+	virtual TOptional<FFrameTime> GetOffsetTime() const override;
+	virtual void MigrateFrameTimes(FFrameRate SourceRate, FFrameRate DestinationRate) override;
+	virtual EMovieSceneChannelProxyType CacheChannelProxy() override;
+
+	// end UMovieSceneSection interface
+
+#if WITH_EDITOR
+	FText GetSectionTitle() const;
+
+	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
+#endif
+
 
 	UPROPERTY()
 	int MaxNotePitch = 127;
@@ -94,34 +103,22 @@ public:
 	UPROPERTY()
 	float SectionHeight = 150.0f;
 
+
 	UPROPERTY()
 	TArray<FMovieSceneIntegerChannel> MidiNoteChannels;
 
-	//UPROPERTY(VisibleAnywhere, Category = "Midi")
-	//TMap<int32, FSequencerMidiNotesTrack> MidiTracks;
 
 	UPROPERTY(EditAnywhere, EditFixedSize, Category = "Midi", meta = (EditFixedSize, TitleProperty = "Name", NoResetToDefault))
 	TArray<FSequencerMidiNotesTrack> MidiChannels;
 
-public:
-	UBkMovieSceneMidiTrackSection(const FObjectInitializer& ObjInit);
-
-	virtual TOptional<TRange<FFrameNumber> > GetAutoSizeRange() const override { return TRange<FFrameNumber>::Empty(); }
-	virtual void TrimSection(FQualifiedFrameTime TrimTime, bool bTrimLeft, bool bDeleteKeys) override;
-	virtual UMovieSceneSection* SplitSection(FQualifiedFrameTime SplitTime, bool bDeleteKeys) override;
-	virtual TOptional<FFrameTime> GetOffsetTime() const override;
-	virtual void MigrateFrameTimes(FFrameRate SourceRate, FFrameRate DestinationRate) override;
-	virtual EMovieSceneChannelProxyType CacheChannelProxy() override;
-
-#if WITH_EDITOR
-	FText GetSectionTitle() const;
-
-	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
-#endif
-
 protected:
 
-	friend class UBkMovieSceneMidiTrack;
+	UPROPERTY(EditAnywhere, Category = "Midi", meta = (InvalidEnumValues = "Beat, None"))
+	EMidiClockSubdivisionQuantization MusicSubdivision = EMidiClockSubdivisionQuantization::QuarterNote;
+
+	//If true, only marks frames within the selection range, if the selection range is empty, marks frames in the entire section
+	UPROPERTY(EditAnywhere, Category = "Midi")
+	bool bMarkOnlyInSelectionRange = true;
 
 	UPROPERTY()
 	TObjectPtr<UMovieSceneTrack> ParentTrack;

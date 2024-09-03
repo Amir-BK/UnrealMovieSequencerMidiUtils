@@ -96,7 +96,6 @@ FKeyPropertyResult FBkMovieSceneMidiTrackEditor::AddNewMidiFile(FFrameNumber Key
 	if (!Track)
 	{
 		Track = FocusedMovieScene->AddTrack<UBkMovieSceneMidiTrack>();
-		//TODO: Check if midi file already exists, maybe? although it is perfectly acceptable for the user to add the same midi file to multiple tracks
 	}
 
 	if (ensure(Track))
@@ -124,10 +123,8 @@ FMidiSceneSectionPainter::FMidiSceneSectionPainter(UMovieSceneSection& InSection
 
 FText FMidiSceneSectionPainter::GetSectionTitle() const
 {
-	auto UDawSection = Cast<UBkMovieSceneMidiTrackSection>(&Section);
-	//Section.Get
 
-	return UDawSection->GetSectionTitle();
+	return Cast<UBkMovieSceneMidiTrackSection>(&Section)->GetSectionTitle();
 }
 
 float FMidiSceneSectionPainter::GetSectionHeight() const
@@ -137,7 +134,6 @@ float FMidiSceneSectionPainter::GetSectionHeight() const
 
 void FMidiSceneSectionPainter::BeginResizeSection()
 {
-	//basically copying the functionality from AudioTrackEditor.cpp
 	UBkMovieSceneMidiTrackSection* MidiSection = Cast<UBkMovieSceneMidiTrackSection>(&Section);
 	InitialStartOffsetDuringResize = MidiSection->GetStartOffset();
 	InitialStartTimeDuringResize = MidiSection->HasStartFrame() ? MidiSection->GetInclusiveStartFrame() : 0;

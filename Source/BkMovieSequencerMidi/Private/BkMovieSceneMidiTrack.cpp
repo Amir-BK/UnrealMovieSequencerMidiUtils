@@ -9,34 +9,25 @@
 UBkMovieSceneMidiTrackSection* UBkMovieSceneMidiTrack::AddNewMidiTrackOnRow(FFrameNumber Time, int32 RowIndex, UMidiFile* InMidiFile)
 {
 
-	//check(DAWData);
+	check(InMidiFile);
 
-	//MidiData = InMidiDataPtr;
-	//FSequencerMidiNotesTrack& NewSectionMidiData = MidiTracks[RowIndex];
 	MidiFile = InMidiFile;
 
 	FFrameRate FrameRate = GetTypedOuter<UMovieScene>()->GetTickResolution();
 	FFrameTime DurationToUse = 1.f * FrameRate; // if all else fails, use 1 second duration
 
-
-
-	//const float Duration = DAWData->SequenceDuration * .001f;
 	const float Duration = InMidiFile->GetSongMaps()->GetSongLengthMs() * .001f;
 
 	DurationToUse = Duration * FrameRate;
 
-
-
 	//add the section
 	UBkMovieSceneMidiTrackSection* NewEvaluationSection = Cast<UBkMovieSceneMidiTrackSection>(CreateNewSection());
 	NewEvaluationSection->ParentTrack = this;
-	//NewEvaluationSection->MidiData = NewSectionMidiData;
+
 	NewEvaluationSection->ParseRawMidiEventsIntoNotesAndChannels(InMidiFile);	
-	//NewEvaluationSection->Midi = MidiFile;
 	
 	NewEvaluationSection->InitialPlacementOnRow(MidiSections, Time, DurationToUse.FrameNumber.Value, RowIndex);
-	//NewEvaluationSection->DAWSequencerData = DAWData;
-	NewEvaluationSection->TrackIndexInParentSession = RowIndex;
+
 
 	MidiSections.Add(NewEvaluationSection);
 

@@ -3,7 +3,6 @@
 #include "LevelSequencePlayer.h"
 #include "MovieScene.h"
 
-
 namespace BkMovieSceneMidiTrackSectionUtils
 {
 	FFrameNumber GetStartOffsetAtTrimTime(FQualifiedFrameTime TrimTime, FFrameNumber StartOffset, FFrameNumber StartFrame)
@@ -102,12 +101,12 @@ void UBkMovieSceneMidiTrackSection::MarkSubdivisionsInRange()
 
 void UBkMovieSceneMidiTrackSection::RebuildNoteKeyFrames()
 {
-#if WITH_EDITOR	
+#if WITH_EDITOR
 	if (CanModify())
 	{
 		Modify();
 #endif
-		
+
 		const auto& SongsMap = Midi->GetSongMaps();
 		FFrameRate FrameRate = GetTypedOuter<UMovieScene>()->GetTickResolution();
 		const float SectionStartTime = FrameRate.AsSeconds(GetInclusiveStartFrame());
@@ -241,8 +240,6 @@ UBkMovieSceneMidiTrackSection::UBkMovieSceneMidiTrackSection(const FObjectInitia
 {
 }
 
-
-
 void UBkMovieSceneMidiTrackSection::TrimSection(FQualifiedFrameTime TrimTime, bool bTrimLeft, bool bDeleteKeys)
 {
 	SetFlags(RF_Transactional);
@@ -315,7 +312,7 @@ EMovieSceneChannelProxyType UBkMovieSceneMidiTrackSection::CacheChannelProxy()
 	{
 		Channels.Add(MidiNoteChannels[i]);
 	}
-#endif 
+#endif
 
 	ChannelProxy = MakeShared<FMovieSceneChannelProxy>(MoveTemp(Channels));
 
