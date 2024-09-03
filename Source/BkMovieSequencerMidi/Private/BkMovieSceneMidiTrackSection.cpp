@@ -100,9 +100,11 @@ void UBkMovieSceneMidiTrackSection::MarkSubdivisionsInRange()
 
 void UBkMovieSceneMidiTrackSection::RebuildNoteKeyFrames()
 {
+#if WITH_EDITOR	
 	if (CanModify())
 	{
 		Modify();
+#endif
 		//const FScopedTransaction Transaction(INVTEXT("Rebuild Note Key Frames"));
 
 		const auto& SongsMap = Midi->GetSongMaps();
@@ -129,7 +131,9 @@ void UBkMovieSceneMidiTrackSection::RebuildNoteKeyFrames()
 
 			NoteChannel.AddKeys(NoteTimesChannels, NotePitchesChannels);
 		}
+#if WITH_EDITOR
 	}
+#endif
 }
 
 void UBkMovieSceneMidiTrackSection::ParseRawMidiEventsIntoNotesAndChannels(UMidiFile* InMidiFile)
@@ -290,6 +294,7 @@ void UBkMovieSceneMidiTrackSection::MigrateFrameTimes(FFrameRate SourceRate, FFr
 EMovieSceneChannelProxyType UBkMovieSceneMidiTrackSection::CacheChannelProxy()
 {
 	FMovieSceneChannelProxyData Channels;
+#if WITH_EDITOR
 
 	for (int i = 0; i < MidiNoteChannels.Num(); i++)
 	{
@@ -301,6 +306,13 @@ EMovieSceneChannelProxyType UBkMovieSceneMidiTrackSection::CacheChannelProxy()
 
 		Channels.Add(MidiNoteChannels[i], MetaData, TMovieSceneExternalValue<int>());
 	}
+#else
+	//no metadata in runtime
+	for (int i = 0; i < MidiNoteChannels.Num(); i++)
+	{
+		Channels.Add(MidiNoteChannels[i]);
+	}
+#endif 
 
 	ChannelProxy = MakeShared<FMovieSceneChannelProxy>(MoveTemp(Channels));
 
