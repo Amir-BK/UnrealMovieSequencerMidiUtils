@@ -1,4 +1,3 @@
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -23,7 +22,6 @@
 
 #include "BkMovieSceneMidiTrackSection.generated.h"
 
-
 class UUndawSequenceMovieSceneTrack;
 //class UDAWSequencerData;
 
@@ -35,11 +33,17 @@ class BKMOVIESEQUENCERMIDI_API UBkMovieSceneMidiTrackSection : public UMovieScen
 {
 	GENERATED_BODY()
 
-
-
 public:
 	UFUNCTION(BlueprintCallable, Category = "Midi", meta = (AutoCreateRefTerm = "InDelegate", Keywords = "Event, Quantization, DAW"))
 	void SubscribeToMidiNoteEventsOnTrackRow(FOnMidiNote InDelegate, int32 InRowIndex) {};
+
+	/** Set the offset into the beginning of the audio clip */
+	UFUNCTION(BlueprintCallable, Category = "Sequencer|Section")
+	void SetStartOffset(FFrameNumber InStartOffset) { StartFrameOffset = InStartOffset; }
+
+	/** Get the offset into the beginning of the audio clip */
+	UFUNCTION(BlueprintPure, Category = "Sequencer|Section")
+	FFrameNumber GetStartOffset() const { return StartFrameOffset; }
 
 protected:
 
@@ -49,11 +53,9 @@ protected:
 	UFUNCTION(CallInEditor, Category = "Midi")
 	void MarkBars();
 
-	//Create marked frames on each selected subdivision within the selection range 
+	//Create marked frames on each selected subdivision within the selection range
 	UFUNCTION(CallInEditor, Category = "Midi")
 	void MarkSubdivisionsInRange();
-
-
 
 #endif // WITH_EDITOR
 
@@ -68,7 +70,6 @@ protected:
 	//If true, only marks frames within the selection range, if the selection range is empty, marks frames in the entire section
 	UPROPERTY(EditAnywhere, Category = "Midi")
 	bool bMarkOnlyInSelectionRange = true;
-
 
 public:
 
@@ -91,24 +92,17 @@ public:
 	UPROPERTY()
 	float SectionHeight = 150.0f;
 
-
-
 	UPROPERTY()
 	TArray<FMovieSceneIntegerChannel> MidiNoteChannels;
-
 
 	//UPROPERTY(VisibleAnywhere, Category = "Midi")
 	//TMap<int32, FSequencerMidiNotesTrack> MidiTracks;
 
-	UPROPERTY(EditAnywhere, EditFixedSize, Category = "Midi", meta =(EditFixedSize, TitleProperty = "Name", NoResetToDefault))
+	UPROPERTY(EditAnywhere, EditFixedSize, Category = "Midi", meta = (EditFixedSize, TitleProperty = "Name", NoResetToDefault))
 	TArray<FSequencerMidiNotesTrack> MidiChannels;
 
-
-
-	
 public:
 	UBkMovieSceneMidiTrackSection(const FObjectInitializer& ObjInit);
-
 
 	virtual TOptional<TRange<FFrameNumber> > GetAutoSizeRange() const override { return TRange<FFrameNumber>::Empty(); }
 	virtual void TrimSection(FQualifiedFrameTime TrimTime, bool bTrimLeft, bool bDeleteKeys) override {}
@@ -121,9 +115,8 @@ public:
 	FText GetSectionTitle() const;
 
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
-#endif 
+#endif
 
-	
 protected:
 
 	friend class UBkMovieSceneMidiTrack;
@@ -131,6 +124,7 @@ protected:
 	UPROPERTY()
 	TObjectPtr<UMovieSceneTrack> ParentTrack;
 
-
-
+	/** The offset into the beginning of the midi clip */
+	UPROPERTY(EditAnywhere, Category = "Midi")
+	FFrameNumber StartFrameOffset;
 };

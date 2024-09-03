@@ -6,20 +6,17 @@
 
 #include "BkMovieSceneMidiTrackSection.h"
 
-
 FBkMovieSceneMidiTrackEditor::FBkMovieSceneMidiTrackEditor(TSharedRef<ISequencer> InSequencer) : FMovieSceneTrackEditor(InSequencer)
 {
 }
 
 TSharedRef<ISequencerTrackEditor> FBkMovieSceneMidiTrackEditor::CreateTrackEditor(TSharedRef<ISequencer> InSequencer)
 {
-
 	return MakeShareable(new FBkMovieSceneMidiTrackEditor(InSequencer));
 }
 
 bool FBkMovieSceneMidiTrackEditor::HandleAssetAdded(UObject* Asset, const FGuid& TargetObjectGuid)
 {
-
 	if (Asset->IsA<UMidiFile>())
 	{
 		UE_LOG(LogTemp, Warning, TEXT("HandleAssetAdded MidiFile"));
@@ -31,7 +28,7 @@ bool FBkMovieSceneMidiTrackEditor::HandleAssetAdded(UObject* Asset, const FGuid&
 
 		int32 RowIndex = INDEX_NONE;
 		AnimatablePropertyChanged(FOnKeyProperty::CreateRaw(this, &FBkMovieSceneMidiTrackEditor::AddNewMidiFile, MidiFileFromAsset, DummyTrack, RowIndex));
-		
+
 		return true;
 	}
 
@@ -43,7 +40,6 @@ bool FBkMovieSceneMidiTrackEditor::SupportsType(TSubclassOf<UMovieSceneTrack> Tr
 }
 void FBkMovieSceneMidiTrackEditor::BuildAddTrackMenu(FMenuBuilder& MenuBuilder)
 {
-
 }
 TSharedPtr<SWidget> FBkMovieSceneMidiTrackEditor::BuildOutlinerEditWidget(const FGuid& ObjectBinding, UMovieSceneTrack* Track, const FBuildEditWidgetParams& Params)
 {
@@ -56,7 +52,6 @@ TSharedRef<ISequencerSection> FBkMovieSceneMidiTrackEditor::MakeSectionInterface
 
 void FBkMovieSceneMidiTrackEditor::Resize(float NewSize, UMovieSceneTrack* InTrack)
 {
-	
 	auto Track = Cast<UBkMovieSceneMidiTrack>(InTrack);
 	if (Track)
 	{
@@ -86,7 +81,6 @@ void FBkMovieSceneMidiTrackEditor::OnDawAssetEnterPressed(const TArray<FAssetDat
 
 FKeyPropertyResult FBkMovieSceneMidiTrackEditor::AddNewMidiFile(FFrameNumber KeyTime, UMidiFile* InMidiFile, UBkMovieSceneMidiTrack* Track, int32 RowIndex)
 {
-	
 	FKeyPropertyResult KeyPropertyResult;
 
 	UMovieScene* FocusedMovieScene = GetFocusedMovieScene();
@@ -101,15 +95,12 @@ FKeyPropertyResult FBkMovieSceneMidiTrackEditor::AddNewMidiFile(FFrameNumber Key
 
 	if (!Track)
 	{
-
 		Track = FocusedMovieScene->AddTrack<UBkMovieSceneMidiTrack>();
 		//TODO: Check if midi file already exists, maybe? although it is perfectly acceptable for the user to add the same midi file to multiple tracks
-
 	}
 
 	if (ensure(Track))
 	{
-
 		Track->Modify();
 		Track->SetDisplayName(FText::FromName(InMidiFile->GetFName()));
 
@@ -117,18 +108,11 @@ FKeyPropertyResult FBkMovieSceneMidiTrackEditor::AddNewMidiFile(FFrameNumber Key
 
 		KeyPropertyResult.SectionsCreated.Add(NewSection);
 
-
 		GetSequencer()->OnAddTrack(Track, FGuid());
-		
 	}
 
+	KeyPropertyResult.bTrackModified = true;
 
-		KeyPropertyResult.bTrackModified = true;
-		
-
-	
-
-	
 	return KeyPropertyResult;
 }
 ;
@@ -136,7 +120,6 @@ FKeyPropertyResult FBkMovieSceneMidiTrackEditor::AddNewMidiFile(FFrameNumber Key
 FMidiSceneSectionPainter::FMidiSceneSectionPainter(UMovieSceneSection& InSection, TWeakPtr<ISequencer> InSequencer)
 	: Section(InSection)
 {
-
 }
 
 FText FMidiSceneSectionPainter::GetSectionTitle() const
@@ -144,7 +127,6 @@ FText FMidiSceneSectionPainter::GetSectionTitle() const
 	auto UDawSection = Cast<UBkMovieSceneMidiTrackSection>(&Section);
 	//Section.Get
 
-	
 	return UDawSection->GetSectionTitle();
 }
 
@@ -153,28 +135,51 @@ float FMidiSceneSectionPainter::GetSectionHeight() const
 	return Cast<UBkMovieSceneMidiTrackSection>(&Section)->SectionHeight;
 }
 
+void FMidiSceneSectionPainter::BeginResizeSection()
+{
+	//basically copying the functionality from AudioTrackEditor.cpp
+	UBkMovieSceneMidiTrackSection* MidiSection = Cast<UBkMovieSceneMidiTrackSection>(&Section);
+	InitialStartOffsetDuringResize = MidiSection->GetStartOffset();
+	InitialStartTimeDuringResize = MidiSection->HasStartFrame() ? MidiSection->GetInclusiveStartFrame() : 0;
+}
 
+void FMidiSceneSectionPainter::ResizeSection(ESequencerSectionResizeMode ResizeMode, FFrameNumber ResizeTime)
+{
+	UBkMovieSceneMidiTrackSection* MidiSection = Cast<UBkMovieSceneMidiTrackSection>(&Section);
+	if (ResizeMode == SSRM_LeadingEdge && MidiSection)
+	{
+		FFrameNumber NewStartOffset = ResizeTime - InitialStartTimeDuringResize;
+		NewStartOffset += InitialStartOffsetDuringResize;
+
+		// Ensure start offset is not less than 0
+		if (NewStartOffset < 0)
+		{
+			ResizeTime = ResizeTime - NewStartOffset;
+			NewStartOffset = FFrameNumber(0);
+		}
+
+		MidiSection->SetStartOffset(NewStartOffset);
+	}
+
+	ISequencerSection::ResizeSection(ResizeMode, ResizeTime);
+}
 
 int32 FMidiSceneSectionPainter::OnPaintSection(FSequencerSectionPainter& InPainter) const
 {
-
 	InPainter.PaintSectionBackground();
 
-	
-	
 	const FTimeToPixel& TimeToPixelConverter = InPainter.GetTimeConverter();
 	FFrameRate TickResolution = TimeToPixelConverter.GetTickResolution();
 	auto UDawSection = Cast<UBkMovieSceneMidiTrackSection>(&Section);
 	const float SectionStartTime = TickResolution.AsSeconds(UDawSection->GetInclusiveStartFrame());
-	
+
 	const auto& MidiSongsMap = UDawSection->Midi->GetSongMaps();
 	const int NoteRange = UDawSection->MaxNotePitch - UDawSection->MinNotePitch + 3;
 	for (int i = 0; i < UDawSection->MidiChannels.Num(); i++)
 	{
-
 		const auto& MidiTrack = UDawSection->MidiChannels[i].Notes;
 		const auto& TrackColor = UDawSection->MidiChannels[i].TrackColor;
-		if (UDawSection->MidiChannels[i].bIsVisible == false) 
+		if (UDawSection->MidiChannels[i].bIsVisible == false)
 		{
 			continue;
 		}
@@ -192,9 +197,6 @@ int32 FMidiSceneSectionPainter::OnPaintSection(FSequencerSectionPainter& InPaint
 		}
 	}
 
-	
-
-	
 	return InPainter.LayerId;
 }
 
@@ -202,4 +204,3 @@ UMovieSceneSection* FMidiSceneSectionPainter::GetSectionObject()
 {
 	return &Section;
 }
-

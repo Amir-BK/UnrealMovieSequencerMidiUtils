@@ -11,7 +11,6 @@ void UBkMovieSceneMidiTrackSection::MarkBars()
 
 	FFrameRate FrameRate = MovieScene->GetTickResolution();
 
-	
 	const float SectionStartTimeSeconds = FrameRate.AsSeconds(GetInclusiveStartFrame());
 
 	const auto& BarMap = Midi->GetSongMaps()->GetBarMap();
@@ -28,7 +27,6 @@ void UBkMovieSceneMidiTrackSection::MarkBars()
 		const auto& BarTime = SongsMap->TickToMs(BarTick) * .001f + SectionStartTimeSeconds;
 		FFrameTime BarFrameTime = FFrameTime(FrameRate.AsFrameTime(BarTime));
 
-
 		auto MarkedFrame = FMovieSceneMarkedFrame(FFrameNumber(BarFrameTime.FrameNumber));
 		MarkedFrame.Label = FString::Printf(TEXT("Bar %d"), ++i);
 		MarkedFrame.Color = FLinearColor::Green;
@@ -36,16 +34,13 @@ void UBkMovieSceneMidiTrackSection::MarkBars()
 
 		BarTick += SongsMap->SubdivisionToMidiTicks(EMidiClockSubdivisionQuantization::Bar, BarTick);
 	}
-
 }
 
 void UBkMovieSceneMidiTrackSection::MarkSubdivisionsInRange()
 {
-	
 	UMovieScene* MovieScene = GetTypedOuter<UMovieScene>();
 
 	FFrameRate FrameRate = MovieScene->GetTickResolution();
-
 
 	const float SectionStartTimeSeconds = FrameRate.AsSeconds(GetInclusiveStartFrame());
 
@@ -53,8 +48,7 @@ void UBkMovieSceneMidiTrackSection::MarkSubdivisionsInRange()
 	const auto& SongsMap = Midi->GetSongMaps();
 	const float FirstTickOfFirstBar = BarMap.MusicTimestampBarToTick(0);
 	const float LastTickOfLastBar = Midi->GetLastEventTick();
-	
-	
+
 	auto SelectionRange = MovieScene->GetSelectionRange();
 
 	FFrameTime RangeToMarkStartFrame;
@@ -69,7 +63,6 @@ void UBkMovieSceneMidiTrackSection::MarkSubdivisionsInRange()
 	{
 		RangeToMarkStartFrame = GetInclusiveStartFrame();
 		RangeToMarkEndFrame = GetExclusiveEndFrame();
-
 	}
 
 	MovieScene->DeleteMarkedFrames();
@@ -82,7 +75,6 @@ void UBkMovieSceneMidiTrackSection::MarkSubdivisionsInRange()
 
 	while (FirstSubdivisionInSelectionRange <= LastSubdivisionInSelectionRange)
 	{
-	
 		const auto& SubdivisionTime = SongsMap->TickToMs(FirstSubdivisionInSelectionRange) * .001f + SectionStartTimeSeconds;
 		FFrameTime SubdivisionFrameTime = FFrameTime(FrameRate.AsFrameTime(SubdivisionTime));
 
@@ -92,9 +84,7 @@ void UBkMovieSceneMidiTrackSection::MarkSubdivisionsInRange()
 		MovieScene->AddMarkedFrame(MarkedFrame);
 
 		FirstSubdivisionInSelectionRange += SongsMap->SubdivisionToMidiTicks(MusicSubdivision, FirstSubdivisionInSelectionRange);
-	
 	}
-
 }
 
 #endif // WITH_EDITOR
@@ -158,8 +148,8 @@ void UBkMovieSceneMidiTrackSection::ParseRawMidiEventsIntoNotesAndChannels(UMidi
 
 				if (MidiEvent.GetMsg().IsNoteOn())
 				{
-				const int32 NoteNumber = MidiEvent.GetMsg().GetStdData1();
-	
+					const int32 NoteNumber = MidiEvent.GetMsg().GetStdData1();
+
 					UnlinkedNoteOns.Add(NoteNumber, MidiEvent);
 				}
 				else
@@ -167,7 +157,6 @@ void UBkMovieSceneMidiTrackSection::ParseRawMidiEventsIntoNotesAndChannels(UMidi
 					const int32 NoteNumber = MidiEvent.GetMsg().GetStdData1();
 					if (UnlinkedNoteOns.Contains(NoteNumber))
 					{
-
 						//we check that they're the same channel
 						if (UnlinkedNoteOns[NoteNumber].GetMsg().GetStdChannel() == MidiEvent.GetMsg().GetStdChannel())
 						{
@@ -211,16 +200,13 @@ void UBkMovieSceneMidiTrackSection::ParseRawMidiEventsIntoNotesAndChannels(UMidi
 								MinNotePitch = NoteNumber;
 							}
 						}
-
 					}
-
 				}
 
 				break;
 			default:
 
 				break;
-
 			}
 		}
 	}
@@ -231,11 +217,9 @@ void UBkMovieSceneMidiTrackSection::ParseRawMidiEventsIntoNotesAndChannels(UMidi
 	{
 		MidiNoteChannels.Add(FMovieSceneIntegerChannel());
 	}
-	
+
 	RebuildNoteKeyFrames();
 }
-
-
 
 UBkMovieSceneMidiTrackSection::UBkMovieSceneMidiTrackSection(const FObjectInitializer& ObjInit) : Super(ObjInit)
 {
@@ -252,19 +236,18 @@ EMovieSceneChannelProxyType UBkMovieSceneMidiTrackSection::CacheChannelProxy()
 		MetaData.Name = *MidiChannels[i].Name;
 		MetaData.DisplayText = FText::FromString(MidiChannels[i].Name);
 		MetaData.Color = MidiChannels[i].TrackColor;
-		
+
 		Channels.Add(MidiNoteChannels[i], MetaData, TMovieSceneExternalValue<int>());
 	}
 
 	ChannelProxy = MakeShared<FMovieSceneChannelProxy>(MoveTemp(Channels));
-	
+
 	return EMovieSceneChannelProxyType::Dynamic;
 }
 
 #if WITH_EDITOR
 FText UBkMovieSceneMidiTrackSection::GetSectionTitle() const
 {
-
 	return FText::FromName(Midi->GetFName());
 }
 void UBkMovieSceneMidiTrackSection::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
@@ -283,14 +266,6 @@ void UBkMovieSceneMidiTrackSection::PostEditChangeProperty(FPropertyChangedEvent
 		{
 			CacheChannelProxy();
 		}
-
-
 	}
-
-
 }
 #endif
-
-
-
-
