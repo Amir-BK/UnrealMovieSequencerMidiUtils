@@ -189,6 +189,7 @@ int32 FMidiSceneSectionPainter::OnPaintSection(FSequencerSectionPainter& InPaint
 	FFrameRate TickResolution = TimeToPixelConverter.GetTickResolution();
 	auto UDawSection = Cast<UBkMovieSceneMidiTrackSection>(&Section);
 	const float SectionStartTime = TickResolution.AsSeconds(UDawSection->GetInclusiveStartFrame());
+	//const float SectionEndTime = TickResolution.AsSeconds(UDawSection->GetExclusiveEndFrame());
 
 	const auto& MidiSongsMap = UDawSection->Midi->GetSongMaps();
 	const int NoteRange = UDawSection->MaxNotePitch - UDawSection->MinNotePitch + 3;
@@ -211,9 +212,10 @@ int32 FMidiSceneSectionPainter::OnPaintSection(FSequencerSectionPainter& InPaint
 			float StartPixel = TimeToPixelConverter.SecondsToPixel(NoteStartTime * .001 + SectionStartTime - SectionStartOffsetSeconds);
 			float EndPixel = TimeToPixelConverter.SecondsToPixel(NoteEndTime * .001f + SectionStartTime - SectionStartOffsetSeconds);
 			if (EndPixel < 0) continue;
+			if (StartPixel > InPainter.SectionGeometry.Size.X) continue;
 
 			//draw line a line from start time to end time at pitch height
-			FSlateDrawElement::MakeLines(InPainter.DrawElements, InPainter.LayerId, InPainter.SectionGeometry.ToPaintGeometry(), TArray<FVector2D>{FVector2D(FMath::Max(StartPixel, 0.0f), MappedPitch), FVector2D(EndPixel, MappedPitch)}, ESlateDrawEffect::None, TrackColor, false);
+			FSlateDrawElement::MakeLines(InPainter.DrawElements, InPainter.LayerId, InPainter.SectionGeometry.ToPaintGeometry(), TArray<FVector2D>{FVector2D(FMath::Max(StartPixel, 0.0f), MappedPitch), FVector2D(FMath::Min(EndPixel, InPainter.SectionGeometry.Size.X), MappedPitch)}, ESlateDrawEffect::None, TrackColor, false);
 		}
 	}
 

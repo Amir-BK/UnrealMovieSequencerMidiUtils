@@ -3,6 +3,15 @@
 #include "LevelSequencePlayer.h"
 #include "MovieScene.h"
 
+
+namespace BkMovieSceneMidiTrackSectionUtils
+{
+	FFrameNumber GetStartOffsetAtTrimTime(FQualifiedFrameTime TrimTime, FFrameNumber StartOffset, FFrameNumber StartFrame)
+	{
+		return StartOffset + TrimTime.Time.FrameNumber - StartFrame;
+	}
+}
+
 #if WITH_EDITOR
 
 void UBkMovieSceneMidiTrackSection::MarkBars()
@@ -223,6 +232,45 @@ void UBkMovieSceneMidiTrackSection::ParseRawMidiEventsIntoNotesAndChannels(UMidi
 
 UBkMovieSceneMidiTrackSection::UBkMovieSceneMidiTrackSection(const FObjectInitializer& ObjInit) : Super(ObjInit)
 {
+}
+
+
+
+void UBkMovieSceneMidiTrackSection::TrimSection(FQualifiedFrameTime TrimTime, bool bTrimLeft, bool bDeleteKeys)
+{
+	SetFlags(RF_Transactional);
+
+	if (TryModify())
+	{
+		if (bTrimLeft)
+		{
+			using namespace BkMovieSceneMidiTrackSectionUtils;
+			StartFrameOffset = HasStartFrame() ? GetStartOffsetAtTrimTime(TrimTime, StartFrameOffset, GetInclusiveStartFrame()) : 0;
+		}
+
+		Super::TrimSection(TrimTime, bTrimLeft, bDeleteKeys);
+	}
+}
+
+UMovieSceneSection* UBkMovieSceneMidiTrackSection::SplitSection(FQualifiedFrameTime SplitTime, bool bDeleteKeys)
+{
+	const FFrameNumber InitialStartFrameOffset = StartFrameOffset;
+
+	using namespace BkMovieSceneMidiTrackSectionUtils;
+
+	const FFrameNumber NewOffset = HasStartFrame() ? GetStartOffsetAtTrimTime(SplitTime, StartFrameOffset, GetInclusiveStartFrame()) : 0;
+
+	UMovieSceneSection* NewSection = Super::SplitSection(SplitTime, bDeleteKeys);
+	if (NewSection != nullptr)
+	{
+		auto* NewAudioSection = Cast<UBkMovieSceneMidiTrackSection>(NewSection);
+		NewAudioSection->StartFrameOffset = NewOffset;
+	}
+
+	//Restore the initial start frame offset
+	StartFrameOffset = InitialStartFrameOffset;
+
+	return NewSection;
 }
 
 TOptional<FFrameTime> UBkMovieSceneMidiTrackSection::GetOffsetTime() const
