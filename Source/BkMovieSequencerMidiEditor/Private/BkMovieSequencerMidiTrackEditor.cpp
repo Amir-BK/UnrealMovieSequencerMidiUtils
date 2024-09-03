@@ -179,6 +179,8 @@ void FMidiSceneSectionPainter::SlipSection(FFrameNumber SlipTime)
 
 	ISequencerSection::SlipSection(SlipTime);
 
+	MidiSection->RebuildNoteKeyFrames();
+
 }
 
 int32 FMidiSceneSectionPainter::OnPaintSection(FSequencerSectionPainter& InPainter) const
@@ -187,25 +189,25 @@ int32 FMidiSceneSectionPainter::OnPaintSection(FSequencerSectionPainter& InPaint
 
 	const FTimeToPixel& TimeToPixelConverter = InPainter.GetTimeConverter();
 	FFrameRate TickResolution = TimeToPixelConverter.GetTickResolution();
-	auto UDawSection = Cast<UBkMovieSceneMidiTrackSection>(&Section);
-	const float SectionStartTime = TickResolution.AsSeconds(UDawSection->GetInclusiveStartFrame());
-	//const float SectionEndTime = TickResolution.AsSeconds(UDawSection->GetExclusiveEndFrame());
+	auto MidiSection = Cast<UBkMovieSceneMidiTrackSection>(&Section);
+	const float SectionStartTime = TickResolution.AsSeconds(MidiSection->GetInclusiveStartFrame());
 
-	const auto& MidiSongsMap = UDawSection->Midi->GetSongMaps();
-	const int NoteRange = UDawSection->MaxNotePitch - UDawSection->MinNotePitch + 3;
-	const auto& SectionStartOffsetSeconds = TickResolution.AsSeconds(UDawSection->GetStartOffset());
-	for (int i = 0; i < UDawSection->MidiChannels.Num(); i++)
+
+	const auto& MidiSongsMap = MidiSection->Midi->GetSongMaps();
+	const int NoteRange = MidiSection->MaxNotePitch - MidiSection->MinNotePitch + 3;
+	const auto& SectionStartOffsetSeconds = TickResolution.AsSeconds(MidiSection->GetStartOffset());
+	for (int i = 0; i < MidiSection->MidiChannels.Num(); i++)
 	{
-		const auto& MidiTrack = UDawSection->MidiChannels[i].Notes;
-		const auto& TrackColor = UDawSection->MidiChannels[i].TrackColor;
-		if (UDawSection->MidiChannels[i].bIsVisible == false)
+		const auto& MidiTrack = MidiSection->MidiChannels[i].Notes;
+		const auto& TrackColor = MidiSection->MidiChannels[i].TrackColor;
+		if (MidiSection->MidiChannels[i].bIsVisible == false)
 		{
 			continue;
 		}
 		for (const auto& Note : MidiTrack)
 		{
 			//a bit ugly and magic numbers but we just want the notes to be offset from the very edges of the section by one note height
-			const float MappedPitch = GetSectionHeight() / NoteRange * (NoteRange - ((Note.NoteNumber + 1) - UDawSection->MinNotePitch));
+			const float MappedPitch = GetSectionHeight() / NoteRange * (NoteRange - ((Note.NoteNumber + 1) - MidiSection->MinNotePitch));
 			const float NoteStartTime = MidiSongsMap->TickToMs(Note.StartTick);
 			const float NoteEndTime = MidiSongsMap->TickToMs(Note.EndTick);
 			//const float NoteOffset = (NoteStartTime * .001f) ;

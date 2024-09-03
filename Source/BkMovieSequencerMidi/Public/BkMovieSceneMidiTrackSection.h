@@ -45,6 +45,10 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Sequencer|Section")
 	FFrameNumber GetStartOffset() const { return StartFrameOffset; }
 
+
+	UFUNCTION(CallInEditor, Category = "Midi")
+	void RebuildNoteKeyFrames();
+
 protected:
 
 #if WITH_EDITOR //The midi section is only used in the editor to mark frames in the sequencer for animation purposes
@@ -59,8 +63,6 @@ protected:
 
 #endif // WITH_EDITOR
 
-	UFUNCTION(CallInEditor, Category = "Midi")
-	void RebuildNoteKeyFrames();
 
 	virtual void ParseRawMidiEventsIntoNotesAndChannels(UMidiFile* InMidiFile);
 
