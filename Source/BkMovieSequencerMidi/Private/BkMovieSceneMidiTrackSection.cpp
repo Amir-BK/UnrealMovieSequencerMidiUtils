@@ -112,7 +112,9 @@ void UBkMovieSceneMidiTrackSection::RebuildNoteKeyFrames()
 
 			for (const auto& Note : Channel.Notes)
 			{
-				const auto& NoteTime = SongsMap->TickToMs(Note.StartTick) * .001f + SectionStartTime - SectionStartOffsetSeconds;
+				
+				const float Tick = bMarkNoteOffs ? Note.EndTick : Note.StartTick;
+				const auto& NoteTime = SongsMap->TickToMs(Tick) * .001f + SectionStartTime - SectionStartOffsetSeconds;
 				const auto NoteFrameTime = FFrameTime(NoteTime * FrameRate);
 
 				//NoteChannel.AddKey(NoteFrameTime.FrameNumber, Note.NoteNumber);
@@ -329,6 +331,12 @@ void UBkMovieSceneMidiTrackSection::PostEditChangeProperty(FPropertyChangedEvent
 		{
 			CacheChannelProxy();
 		}
+		// if bMarkNoteOffs changed, rebuild keyframes
+		if (PropertyName == GET_MEMBER_NAME_CHECKED(UBkMovieSceneMidiTrackSection, bMarkNoteOffs))
+		{
+			RebuildNoteKeyFrames();
+		}
+
 	}
 }
 #endif

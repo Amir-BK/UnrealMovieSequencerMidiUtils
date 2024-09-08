@@ -87,6 +87,9 @@ public:
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 #endif
 
+	// if true the will key note off events in the sequencer instead of note on events
+	UPROPERTY(EditAnywhere, Category = "Midi")
+	bool bMarkNoteOffs = false;
 
 	UPROPERTY()
 	int MaxNotePitch = 127;
