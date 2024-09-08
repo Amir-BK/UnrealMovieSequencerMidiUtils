@@ -14,3 +14,6 @@ Can also mark frames on musical grid units using the midi file's clock.
 This plug in does not render midi or broadcast it to the scene, yet. 
 
 As I cannot sell this on the marketplace until the Harmonix plugin stops being experimental I'm sharing it here on github for now. 
+
+# Community/Feedback/Support -  
+ Discord  - https://discord.gg/hTKjSfcbEn
