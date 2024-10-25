@@ -1,5 +1,6 @@
 #include "BkMovieSceneMidiTrackSection.h"
 #include "Channels/MovieSceneChannelProxy.h"
+#include “Misc/EngineVersionComparison.h”
 #include "LevelSequencePlayer.h"
 #include "MovieScene.h"
 
@@ -40,7 +41,12 @@ void UBkMovieSceneMidiTrackSection::MarkBars()
 			FFrameTime BarFrameTime = FFrameTime(FrameRate.AsFrameTime(BarTime + SectionStartTimeSeconds));
 			auto MarkedFrame = FMovieSceneMarkedFrame(FFrameNumber(BarFrameTime.FrameNumber));
 			MarkedFrame.Label = FString::Printf(TEXT("Bar %d"), ++i);
+#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION == 4
 			MarkedFrame.Color = FLinearColor::Green;
+#else
+			MarkedFrame.CustomColor = FLinearColor::Green;
+#endif
+			
 			MarkedFrames.Add(MovieScene->AddMarkedFrame(MarkedFrame));
 		}
 		else {
@@ -77,7 +83,12 @@ void UBkMovieSceneMidiTrackSection::MarkSubdivisions()
 		{
 			FFrameTime BarFrameTime = FFrameTime(FrameRate.AsFrameTime(SubdivTime + SectionStartTimeSeconds));
 			auto MarkedFrame = FMovieSceneMarkedFrame(FFrameNumber(BarFrameTime.FrameNumber));
+#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION == 4
 			MarkedFrame.Color = FLinearColor::Gray;
+#else
+			MarkedFrame.CustomColor = FLinearColor::Gray;
+#endif
+
 			MarkedFrames.Add(MovieScene->AddMarkedFrame(MarkedFrame));
 		}
 
