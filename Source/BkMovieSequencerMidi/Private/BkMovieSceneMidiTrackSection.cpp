@@ -1,6 +1,6 @@
 #include "BkMovieSceneMidiTrackSection.h"
 #include "Channels/MovieSceneChannelProxy.h"
-#include “Misc/EngineVersionComparison.h”
+#include "Misc/EngineVersionComparison.h"
 #include "LevelSequencePlayer.h"
 #include "MovieScene.h"
 
