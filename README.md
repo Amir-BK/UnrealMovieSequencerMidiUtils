@@ -1,3 +1,8 @@
+Status:
+Epic are adding better integration between the movie sequencer and midi files, seems like it will be added to the 5.6 timeframe: https://github.com/EpicGames/UnrealEngine/commit/6145872aaa92ea6c9e50ed07adfd22fbf736e3f3
+
+So probably this repository won't see much maintanenace from me in the future unless the Epic updates make it feasible to add actual midi editing support to the unreal sequencer, in the meanwhile I think this repo can serve as decent reference for adding custom tracks with slate widgets to the unreal sequencer. 
+
 # UnrealMovieSequencerMidiUtils
 
 Drag and drop Midi files (imported using the Harmonix plugin) into the sequencer to create Midi tracks that automatically create key frames on every note event from the midi file, useful for musically synced animations.
@@ -11,9 +16,8 @@ Can also mark frames on musical grid units using the midi file's clock.
 
 ![Screenshot 2024-09-03 14-58-53](https://github.com/user-attachments/assets/b9e7147f-153e-4971-93aa-a063d3bf6d18)
 
-This plug in does not render midi or broadcast it to the scene, yet. 
+This plug in does not render midi or broadcast it to the scene.
 
-As I cannot sell this on the marketplace until the Harmonix plugin stops being experimental I'm sharing it here on github for now. 
 
 # Community/Feedback/Support -  
  Discord  - https://discord.gg/hTKjSfcbEn
